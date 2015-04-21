@@ -67,7 +67,9 @@ func (t *TermUI) Update(data Data) {
 	var totalAlloc int64
 	for _, service := range data.Services {
 		if service.Err != nil {
-			names.Items = append(names.Items, fmt.Sprintf("[E] %s failed", service.Name))
+			names.Items = append(names.Items, fmt.Sprintf("[ERR] %s failed", service.Name))
+			meminfo.Items = append(meminfo.Items, "N/A")
+			goroutines.Items = append(goroutines.Items, "N/A")
 			continue
 		}
 		alloc := byten.Size(int64(service.Memstats.Alloc))
