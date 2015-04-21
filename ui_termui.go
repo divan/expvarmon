@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/gizak/termui"
 	"github.com/pyk/byten"
-	"log"
 )
 
 // TermUI is a termUI implementation of UI interface.
@@ -21,7 +22,8 @@ func (t *TermUI) Init() {
 }
 
 func (t *TermUI) Update(data Data) {
-	text := fmt.Sprintf("monitoring %d services, press q to quit", len(data.Services))
+	total := len(data.Services)
+	text := fmt.Sprintf("monitoring %d services, press q to quit", total)
 
 	p := termui.NewPar(text)
 	p.Height = 3
@@ -39,37 +41,62 @@ func (t *TermUI) Update(data Data) {
 	p1.Border.Label = "Status"
 	p1.Border.FgColor = termui.ColorCyan
 
-	ls := termui.NewList()
+	names := termui.NewList()
+	names.Y = 3
+	names.ItemFgColor = termui.ColorYellow
+	names.Border.Label = "Services"
+	names.Height = total + 2
+	names.Width = termui.TermWidth() / 4
 
+	meminfo := termui.NewList()
+	meminfo.Y = 3
+	meminfo.X = names.X + names.Width
+	meminfo.Width = meminfo.X + termui.TermWidth()/3
+	meminfo.Height = total + 2
+	meminfo.ItemFgColor = termui.ColorBlue
+	meminfo.Border.Label = "Memory Usage (Alloc/HeapAlloc)"
+
+	goroutines := termui.NewList()
+	goroutines.Y = 3
+	goroutines.X = meminfo.X + meminfo.Width
+	goroutines.Width = termui.TermWidth() - goroutines.X
+	goroutines.Height = total + 2
+	goroutines.ItemFgColor = termui.ColorGreen
+	goroutines.Border.Label = "Goroutines"
+
+	var totalAlloc int64
 	for _, service := range data.Services {
 		if service.Err != nil {
-			ls.Items = append(ls.Items, fmt.Sprintf("[E] %s failed", service.Name))
+			names.Items = append(names.Items, fmt.Sprintf("[E] %s failed", service.Name))
 			continue
 		}
 		alloc := byten.Size(int64(service.Memstats.Alloc))
-		sys := byten.Size(int64(service.Memstats.Sys))
-		ls.Items = append(ls.Items, fmt.Sprintf("[R] %s: %s/%s goroutines: %d", service.Name, alloc, sys, service.Goroutines))
+		heap := byten.Size(int64(service.Memstats.HeapAlloc))
+		totalAlloc += int64(service.Memstats.Alloc)
+
+		name := fmt.Sprintf("[R] %s", service.Name)
+		meminfos := fmt.Sprintf("%s/%s", alloc, heap)
+		goroutine := fmt.Sprintf("%d", service.Goroutines)
+
+		names.Items = append(names.Items, name)
+		meminfo.Items = append(meminfo.Items, meminfos)
+		goroutines.Items = append(goroutines.Items, goroutine)
 	}
-	ls.ItemFgColor = termui.ColorYellow
-	ls.Border.Label = "Services"
-	ls.Height = 10
-	ls.Width = 100
-	ls.Width = termui.TermWidth()
-	ls.Y = 3
+	data.TotalMemory.Push(int(totalAlloc / 1024))
 
-	dat := []int{4, 2, 1, 6, 3, 9, 1, 4, 2, 15, 14, 9, 8, 6, 10, 13, 15, 12, 10, 5, 3, 6, 1, 7, 10, 10, 14, 13, 6}
-	spl0 := termui.NewSparkline()
-	spl0.Data = dat[3:]
-	spl0.LineColor = termui.ColorGreen
+	spl3 := termui.NewSparkline()
+	spl3.Data = data.TotalMemory.Values
+	spl3.Height = termui.TermHeight() - 3 - (total + 2) - 3
+	spl3.LineColor = termui.ColorYellow
 
-	spls0 := termui.NewSparklines(spl0)
-	spls0.Height = 2
-	spls0.Width = 20
-	spls0.X = 60
-	spls0.Y = 3
-	spls0.HasBorder = false
+	spls2 := termui.NewSparklines(spl3)
+	spls2.Y = 3 + (total + 2)
+	spls2.Height = termui.TermHeight() - spls2.Y
+	spls2.Width = termui.TermWidth()
+	spls2.Border.FgColor = termui.ColorCyan
+	spls2.Border.Label = fmt.Sprintf("Total Memory Usage: %s", byten.Size(totalAlloc))
 
-	termui.Render(p, p1, ls, spls0)
+	termui.Render(p, p1, names, meminfo, goroutines, spls2)
 }
 
 func (t *TermUI) Close() {

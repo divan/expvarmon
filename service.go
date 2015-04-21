@@ -8,8 +8,14 @@ import (
 // Data represents data to be passed to UI.
 type Data struct {
 	Services      Services
-	Containers    *Container
+	TotalMemory   *Stack
 	LastTimestamp time.Time
+}
+
+func NewData() *Data {
+	return &Data{
+		TotalMemory: NewStack(140),
+	}
 }
 
 type Services []*Service

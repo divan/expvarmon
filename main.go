@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	interval = flag.Duration("i", 2*time.Second, "Polling interval")
+	interval = flag.Duration("i", 1*time.Second, "Polling interval")
 	portsArg = flag.String("ports", "40001,40002,40000,40004", "Ports for accessing services expvars")
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
 )
@@ -23,7 +23,7 @@ func main() {
 		log.Fatal("cannot parse ports:", err)
 	}
 
-	var data Data
+	data := *NewData()
 	var source Source = NewExpvarsSource(ports)
 	for _, port := range ports {
 		service := NewService(port)
