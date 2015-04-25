@@ -12,11 +12,11 @@ func TestStack(t *testing.T) {
 
 		if l < size {
 			if l != i+1 {
-				t.Fatal("len is incorrect. expecting %d, got %d", i, l)
+				t.Fatalf("len is incorrect. expecting %d, got %d", i, l)
 			}
 		} else {
 			if l != size {
-				t.Fatal("len is incorrect. expecting %d, got %d", size, l)
+				t.Fatalf("len is incorrect. expecting %d, got %d", size, l)
 			}
 		}
 	}
