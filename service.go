@@ -1,33 +1,21 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"runtime"
-	"time"
+	"strings"
 )
-
-// Data represents data to be passed to UI.
-type Data struct {
-	Services      Services
-	TotalMemory   *Stack
-	LastTimestamp time.Time
-}
-
-func NewData() *Data {
-	return &Data{
-		TotalMemory: NewStack(140),
-	}
-}
 
 type Services []*Service
 
 // Service represents constantly updating info about single service.
 type Service struct {
-	Name       string
-	Port       string
-	IsAlive    bool
-	Cmdline    string
-	Memstats   *runtime.MemStats
-	Goroutines int64
+	Port string
+	Name string
+
+	Cmdline  string
+	Memstats *runtime.MemStats
 
 	Err error
 }
@@ -40,15 +28,35 @@ func NewService(port string) *Service {
 	}
 }
 
-func (d *Data) FindService(port string) *Service {
-	if d.Services == nil {
-		return nil
-	}
-	for _, service := range d.Services {
-		if service.Port == port {
-			return service
+// Update updates Service info from Expvar variable.
+func (s *Service) Update() {
+	expvar := &Expvar{}
+	resp, err := http.Get(s.Addr())
+	defer resp.Body.Close()
+	if err != nil {
+		expvar.Err = err
+	} else if resp.StatusCode == http.StatusNotFound {
+		expvar.Err = fmt.Errorf("Vars not found. Did you import expvars?")
+	} else {
+		expvar, err = ParseExpvar(resp.Body)
+		if err != nil {
+			expvar = &Expvar{Err: err}
 		}
 	}
 
-	return nil
+	s.Err = expvar.Err
+	s.Memstats = expvar.MemStats
+
+	// Update name and cmdline only if empty
+	if len(s.Cmdline) == 0 {
+		s.Cmdline = strings.Join(expvar.Cmdline, " ")
+		s.Name = BaseCommand(expvar.Cmdline)
+	}
+}
+
+// Addr returns fully qualified host:port pair for service.
+//
+// If host is not specified, 'localhost' is used.
+func (s Service) Addr() string {
+	return fmt.Sprintf("http://localhost:%s%s", s.Port, ExpvarsUrl)
 }

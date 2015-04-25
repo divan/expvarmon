@@ -78,11 +78,11 @@ func (t *TermUI) Update(data Data) {
 
 		name := fmt.Sprintf("[R] %s", service.Name)
 		meminfos := fmt.Sprintf("%s/%s", alloc, heap)
-		goroutine := fmt.Sprintf("%d", service.Goroutines)
+		//goroutine := fmt.Sprintf("%d", service.Goroutines)
 
 		names.Items = append(names.Items, name)
 		meminfo.Items = append(meminfo.Items, meminfos)
-		goroutines.Items = append(goroutines.Items, goroutine)
+		//goroutines.Items = append(goroutines.Items, goroutine)
 	}
 	data.TotalMemory.Push(int(totalAlloc / 1024))
 

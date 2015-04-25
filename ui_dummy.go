@@ -27,9 +27,11 @@ func (u *DummyUI) Update(data Data) {
 			fmt.Printf("%s/%s ", alloc, sys)
 		}
 
-		if service.Goroutines != 0 {
-			fmt.Printf("goroutines: %d", service.Goroutines)
-		}
+		/*
+			if service.Goroutines != 0 {
+				fmt.Printf("goroutines: %d", service.Goroutines)
+			}
+		*/
 		fmt.Printf("\n")
 	}
 }

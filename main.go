@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/gizak/termui"
@@ -24,7 +22,7 @@ func main() {
 	}
 
 	data := *NewData()
-	var source Source = NewExpvarsSource(ports)
+	var source = NewExpvarsSource(ports)
 	for _, port := range ports {
 		service := NewService(port)
 		data.Services = append(data.Services, service)
@@ -41,31 +39,17 @@ func main() {
 	evtCh := termui.EventCh()
 
 	update := func() {
-		d, err := source.Update()
-		if err != nil {
-			log.Println("[ERROR] Cannot update data from source:", err)
-			return
-		}
-		switch source.(type) {
-		case *ExpvarsSource:
-			dat := d.(Expvars)
-
-			for _, port := range source.(*ExpvarsSource).Ports {
-				service := data.FindService(port)
-				if service == nil {
-					continue
-				}
-
-				service.Err = dat[port].Err
-				service.Memstats = dat[port].MemStats
-				service.Goroutines = dat[port].Goroutines
-				service.Cmdline = strings.Join(dat[port].Cmdline, " ")
-				if dat[port].Cmdline != nil {
-					service.Name = filepath.Base(dat[port].Cmdline[0])
-				}
+		for _, port := range source.Ports {
+			service := data.FindService(port)
+			if service == nil {
+				continue
 			}
+
+			service.Update()
 		}
+
 		data.LastTimestamp = time.Now()
+
 		ui.Update(data)
 	}
 	update()
