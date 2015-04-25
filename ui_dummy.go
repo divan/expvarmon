@@ -8,9 +8,9 @@ import (
 // DummyUI is an simple console UI mockup, for testing purposes.
 type DummyUI struct{}
 
-func (u *DummyUI) Init()  {}
-func (u *DummyUI) Close() {}
-func (u *DummyUI) Update(data Data) {
+func (*DummyUI) Init(Data) {}
+func (*DummyUI) Close()    {}
+func (*DummyUI) Update(data Data) {
 	if data.Services == nil {
 		return
 	}

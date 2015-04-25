@@ -5,6 +5,7 @@ import "time"
 // Data represents data to be passed to UI.
 type Data struct {
 	Services      Services
+	Total         int
 	TotalMemory   *Stack
 	LastTimestamp time.Time
 }

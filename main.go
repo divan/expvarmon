@@ -5,11 +5,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/gizak/termui"
+	"github.com/divan/termui"
 )
 
 var (
-	interval = flag.Duration("i", 1*time.Second, "Polling interval")
+	interval = flag.Duration("i", 10*time.Second, "Polling interval")
 	portsArg = flag.String("ports", "40001,40002,40000,40004,1233,1234,1235", "Ports for accessing services expvars")
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
 )
@@ -27,12 +27,13 @@ func main() {
 		service := NewService(port)
 		data.Services = append(data.Services, service)
 	}
+	data.Total = len(data.Services)
 
 	var ui UI = &TermUI{}
 	if *dummy {
 		ui = &DummyUI{}
 	}
-	ui.Init()
+	ui.Init(data)
 	defer ui.Close()
 
 	tick := time.NewTicker(*interval)
@@ -60,6 +61,10 @@ func main() {
 		case e := <-evtCh:
 			if e.Type == termui.EventKey && e.Ch == 'q' {
 				return
+			}
+			if e.Type == termui.EventResize {
+				termui.Body.Width = termui.TermWidth()
+				termui.Body.Align()
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/pyk/byten"
 	"net/http"
 	"runtime"
 	"strings"
@@ -60,7 +61,7 @@ func (s *Service) Update() {
 	// Put metrics data
 	mem, ok := s.Values["memory"]
 	if !ok {
-		s.Values["memory"] = NewStack(40)
+		s.Values["memory"] = NewStack(1200)
 		mem = s.Values["memory"]
 	}
 	mem.Push(int(s.MemStats.Alloc) / 1024)
@@ -71,4 +72,24 @@ func (s *Service) Update() {
 // If host is not specified, 'localhost' is used.
 func (s Service) Addr() string {
 	return fmt.Sprintf("http://localhost:%s%s", s.Port, ExpvarsUrl)
+}
+
+// StatusLine returns status line for services with it's name and status.
+func (s Service) StatusLine() string {
+	if s.Err != nil {
+		return fmt.Sprintf("[ERR] %s failed", s.Name)
+	}
+
+	return fmt.Sprintf("[R] %s", s.Name)
+}
+
+// Meminfo returns memory info string for the given service.
+func (s Service) Meminfo() string {
+	if s.Err != nil || s.MemStats == nil {
+		return "N/A"
+	}
+
+	allocated := byten.Size(int64(s.MemStats.Alloc))
+	sys := byten.Size(int64(s.MemStats.Sys))
+	return fmt.Sprintf("Alloc/Sys: %s / %s", allocated, sys)
 }
