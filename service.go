@@ -15,7 +15,9 @@ type Service struct {
 	Name string
 
 	Cmdline  string
-	Memstats *runtime.MemStats
+	MemStats *runtime.MemStats
+
+	Values map[string]*Stack
 
 	Err error
 }
@@ -25,6 +27,8 @@ func NewService(port string) *Service {
 	return &Service{
 		Name: port, // we have only port on start, so use it as name until resolved
 		Port: port,
+
+		Values: make(map[string]*Stack),
 	}
 }
 
@@ -45,13 +49,21 @@ func (s *Service) Update() {
 	}
 
 	s.Err = expvar.Err
-	s.Memstats = expvar.MemStats
+	s.MemStats = expvar.MemStats
 
 	// Update name and cmdline only if empty
 	if len(s.Cmdline) == 0 {
 		s.Cmdline = strings.Join(expvar.Cmdline, " ")
 		s.Name = BaseCommand(expvar.Cmdline)
 	}
+
+	// Put metrics data
+	mem, ok := s.Values["memory"]
+	if !ok {
+		s.Values["memory"] = NewStack(40)
+		mem = s.Values["memory"]
+	}
+	mem.Push(int(s.MemStats.Alloc) / 1024)
 }
 
 // Addr returns fully qualified host:port pair for service.

@@ -72,18 +72,33 @@ func (t *TermUI) Update(data Data) {
 			goroutines.Items = append(goroutines.Items, "N/A")
 			continue
 		}
-		alloc := byten.Size(int64(service.Memstats.Alloc))
-		heap := byten.Size(int64(service.Memstats.HeapAlloc))
-		totalAlloc += int64(service.Memstats.Alloc)
+		alloc := byten.Size(int64(service.MemStats.Alloc))
+		heap := byten.Size(int64(service.MemStats.HeapAlloc))
+		totalAlloc += int64(service.MemStats.Alloc)
 
 		name := fmt.Sprintf("[R] %s", service.Name)
 		meminfos := fmt.Sprintf("%s/%s", alloc, heap)
-		//goroutine := fmt.Sprintf("%d", service.Goroutines)
 
 		names.Items = append(names.Items, name)
 		meminfo.Items = append(meminfo.Items, meminfos)
-		//goroutines.Items = append(goroutines.Items, goroutine)
 	}
+
+	var sparklines []termui.Sparkline
+	for _, service := range data.Services {
+		spl := termui.NewSparkline()
+		spl.Data = service.Values["memory"].Values
+		spl.Height = 1
+		spl.LineColor = termui.ColorGreen
+		sparklines = append(sparklines, spl)
+	}
+
+	spls := termui.NewSparklines(sparklines...)
+	spls.Height = len(data.Services) + 1
+	spls.Width = 40
+	spls.Y = 3
+	spls.X = meminfo.X + meminfo.Width - spls.Width - 1
+	spls.HasBorder = false
+
 	data.TotalMemory.Push(int(totalAlloc / 1024))
 
 	spl3 := termui.NewSparkline()
@@ -98,7 +113,7 @@ func (t *TermUI) Update(data Data) {
 	spls2.Border.FgColor = termui.ColorCyan
 	spls2.Border.Label = fmt.Sprintf("Total Memory Usage: %s", byten.Size(totalAlloc))
 
-	termui.Render(p, p1, names, meminfo, goroutines, spls2)
+	termui.Render(p, p1, names, meminfo, goroutines, spls2, spls)
 }
 
 func (t *TermUI) Close() {

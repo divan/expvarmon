@@ -21,9 +21,9 @@ func (u *DummyUI) Update(data Data) {
 			continue
 		}
 
-		if service.Memstats != nil {
-			alloc := byten.Size(int64(service.Memstats.Alloc))
-			sys := byten.Size(int64(service.Memstats.Sys))
+		if service.MemStats != nil {
+			alloc := byten.Size(int64(service.MemStats.Alloc))
+			sys := byten.Size(int64(service.MemStats.Sys))
 			fmt.Printf("%s/%s ", alloc, sys)
 		}
 
