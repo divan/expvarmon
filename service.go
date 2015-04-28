@@ -1,11 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"github.com/pyk/byten"
 	"net/http"
 	"runtime"
 	"strings"
+
+	"github.com/pyk/byten"
 )
 
 type Services []*Service
@@ -33,20 +35,30 @@ func NewService(port string) *Service {
 	}
 }
 
+func GetExpvar(addr string) (*Expvar, error) {
+	var e Expvar
+	resp, err := http.Get(addr)
+	if err != nil {
+		return &e, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return &e, errors.New("Vars not found. Did you import expvars?")
+	} else {
+		expvar, err := ParseExpvar(resp.Body)
+		e = *expvar
+		if err != nil {
+			return &e, err
+		}
+	}
+	return &e, nil
+}
+
 // Update updates Service info from Expvar variable.
 func (s *Service) Update() {
-	expvar := &Expvar{}
-	resp, err := http.Get(s.Addr())
-	defer resp.Body.Close()
+	expvar, err := GetExpvar(s.Addr())
 	if err != nil {
 		expvar.Err = err
-	} else if resp.StatusCode == http.StatusNotFound {
-		expvar.Err = fmt.Errorf("Vars not found. Did you import expvars?")
-	} else {
-		expvar, err = ParseExpvar(resp.Body)
-		if err != nil {
-			expvar = &Expvar{Err: err}
-		}
 	}
 
 	s.Err = expvar.Err
@@ -64,7 +76,9 @@ func (s *Service) Update() {
 		s.Values["memory"] = NewStack(1200)
 		mem = s.Values["memory"]
 	}
-	mem.Push(int(s.MemStats.Alloc) / 1024)
+	if s.MemStats != nil {
+		mem.Push(int(s.MemStats.Alloc) / 1024)
+	}
 }
 
 // Addr returns fully qualified host:port pair for service.
