@@ -21,3 +21,11 @@ func (s *Stack) Push(val int) {
 		s.Values = s.Values[1:]
 	}
 }
+
+// Front returns front value.
+func (s *Stack) Front() int {
+	if len(s.Values) == 0 {
+		return 0
+	}
+	return s.Values[len(s.Values)-1]
+}

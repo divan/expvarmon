@@ -91,7 +91,7 @@ func (t *TermUI) Update(data Data) {
 	var meminfos []string
 	for _, service := range data.Services {
 		services = append(services, service.StatusLine())
-		meminfos = append(meminfos, service.Meminfo())
+		meminfos = append(meminfos, service.Value("mem.alloc"))
 	}
 	t.Services.Items = services
 	t.Services.Height = data.Total + 2
@@ -102,7 +102,7 @@ func (t *TermUI) Update(data Data) {
 	// Sparklines
 	for i, service := range data.Services {
 		t.MemSparkline.Lines[i].Title = service.Name
-		t.MemSparkline.Lines[i].Data = service.Values["memory"].Values
+		t.MemSparkline.Lines[i].Data = service.Values("mem.alloc")
 	}
 
 	termui.Body.Width = termui.TermWidth()

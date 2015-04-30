@@ -7,20 +7,18 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/pyk/byten"
+	//"github.com/pyk/byten"
 )
 
 type Services []*Service
 
 // Service represents constantly updating info about single service.
 type Service struct {
-	Port string
-	Name string
+	Port    string
+	Name    string
+	Cmdline string
 
-	Cmdline  string
-	MemStats *runtime.MemStats
-
-	Values map[string]*Stack
+	values map[string]*Stack
 
 	Err error
 }
@@ -31,11 +29,12 @@ func NewService(port string) *Service {
 		Name: port, // we have only port on start, so use it as name until resolved
 		Port: port,
 
-		Values: make(map[string]*Stack),
+		values: make(map[string]*Stack),
 	}
 }
 
-func GetExpvar(addr string) (*Expvar, error) {
+// FetchExpvar fetches expvar by http for the given addr (host:port)
+func FetchExpvar(addr string) (*Expvar, error) {
 	var e Expvar
 	resp, err := http.Get(addr)
 	if err != nil {
@@ -56,28 +55,34 @@ func GetExpvar(addr string) (*Expvar, error) {
 
 // Update updates Service info from Expvar variable.
 func (s *Service) Update() {
-	expvar, err := GetExpvar(s.Addr())
+	expvar, err := FetchExpvar(s.Addr())
 	if err != nil {
 		expvar.Err = err
 	}
 
 	s.Err = expvar.Err
-	s.MemStats = expvar.MemStats
 
+	s.updateCmdline(expvar.Cmdline)
+	s.updateMem(expvar.MemStats)
+}
+
+func (s *Service) updateCmdline(cmdline []string) {
 	// Update name and cmdline only if empty
 	if len(s.Cmdline) == 0 {
-		s.Cmdline = strings.Join(expvar.Cmdline, " ")
-		s.Name = BaseCommand(expvar.Cmdline)
+		s.Cmdline = strings.Join(cmdline, " ")
+		s.Name = BaseCommand(cmdline)
 	}
+}
 
+func (s *Service) updateMem(memstats *runtime.MemStats) {
 	// Put metrics data
-	mem, ok := s.Values["memory"]
+	mem, ok := s.values["mem.alloc"]
 	if !ok {
-		s.Values["memory"] = NewStack(1200)
-		mem = s.Values["memory"]
+		s.values["mem.alloc"] = NewStack(1200)
+		mem = s.values["mem.alloc"]
 	}
-	if s.MemStats != nil {
-		mem.Push(int(s.MemStats.Alloc) / 1024)
+	if memstats != nil {
+		mem.Push(int(memstats.Alloc))
 	}
 }
 
@@ -97,13 +102,31 @@ func (s Service) StatusLine() string {
 	return fmt.Sprintf("[R] %s", s.Name)
 }
 
-// Meminfo returns memory info string for the given service.
-func (s Service) Meminfo() string {
-	if s.Err != nil || s.MemStats == nil {
+func (s Service) Value(key string) string {
+	if s.Err != nil {
+		return "N/A"
+	}
+	val, ok := s.values[key]
+	if !ok {
+		return "N/A"
+	}
+	if val.Front() == 0 {
 		return "N/A"
 	}
 
-	allocated := byten.Size(int64(s.MemStats.Alloc))
-	sys := byten.Size(int64(s.MemStats.Sys))
-	return fmt.Sprintf("Alloc/Sys: %s / %s", allocated, sys)
+	//allocated := byten.Size(int64(val.Front()))
+	//return fmt.Sprintf("Alloc: %s", allocated)
+	return fmt.Sprintf("%d", val.Front())
+}
+
+func (s Service) Values(key string) []int {
+	if s.Err != nil {
+		return nil
+	}
+	val, ok := s.values[key]
+	if !ok {
+		return nil
+	}
+
+	return val.Values
 }

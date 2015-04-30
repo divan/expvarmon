@@ -29,6 +29,7 @@ func NewExpvarsSource(ports []string) *ExpvarsSource {
 }
 
 // ParseExpvar unmarshals data to Expvar variable.
+// TODO: implement Unmarshaller/Decode for Expvar
 func ParseExpvar(r io.Reader) (*Expvar, error) {
 	var vars Expvar
 	dec := json.NewDecoder(r)
