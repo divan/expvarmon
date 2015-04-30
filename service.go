@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"runtime"
 	"strings"
 
+	"github.com/antonholmquist/jason"
 	//"github.com/pyk/byten"
 )
 
@@ -34,8 +34,8 @@ func NewService(port string) *Service {
 }
 
 // FetchExpvar fetches expvar by http for the given addr (host:port)
-func FetchExpvar(addr string) (*Expvar, error) {
-	var e Expvar
+func FetchExpvar(addr string) (*jason.Object, error) {
+	var e jason.Object
 	resp, err := http.Get(addr)
 	if err != nil {
 		return &e, err
@@ -44,7 +44,7 @@ func FetchExpvar(addr string) (*Expvar, error) {
 	if resp.StatusCode == http.StatusNotFound {
 		return &e, errors.New("Vars not found. Did you import expvars?")
 	} else {
-		expvar, err := ParseExpvar(resp.Body)
+		expvar, err := jason.NewObjectFromReader(resp.Body)
 		e = *expvar
 		if err != nil {
 			return &e, err
@@ -57,13 +57,22 @@ func FetchExpvar(addr string) (*Expvar, error) {
 func (s *Service) Update() {
 	expvar, err := FetchExpvar(s.Addr())
 	if err != nil {
-		expvar.Err = err
+		s.Err = err
 	}
 
-	s.Err = expvar.Err
+	cmdline, err := expvar.GetStringArray("cmdline")
+	if err != nil {
+		s.Err = err
+	} else {
+		s.updateCmdline(cmdline)
+	}
 
-	s.updateCmdline(expvar.Cmdline)
-	s.updateMem(expvar.MemStats)
+	alloc, err := expvar.GetInt64("memstats", "Alloc")
+	if err != nil {
+		s.Err = err
+	} else {
+		s.updateMem(alloc)
+	}
 }
 
 func (s *Service) updateCmdline(cmdline []string) {
@@ -74,16 +83,14 @@ func (s *Service) updateCmdline(cmdline []string) {
 	}
 }
 
-func (s *Service) updateMem(memstats *runtime.MemStats) {
+func (s *Service) updateMem(alloc int64) {
 	// Put metrics data
 	mem, ok := s.values["mem.alloc"]
 	if !ok {
 		s.values["mem.alloc"] = NewStack(1200)
 		mem = s.values["mem.alloc"]
 	}
-	if memstats != nil {
-		mem.Push(int(memstats.Alloc))
-	}
+	mem.Push(int(alloc))
 }
 
 // Addr returns fully qualified host:port pair for service.

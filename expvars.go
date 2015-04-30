@@ -1,8 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"io"
+	//"io"
 	"runtime"
 )
 
@@ -19,6 +18,8 @@ type Expvar struct {
 	MemStats *runtime.MemStats `json:"memstats"`
 	Cmdline  []string          `json:"cmdline"`
 
+	Extra map[string]interface{} `json:"-"`
+
 	Err error `json:"-,omitempty"`
 }
 
@@ -28,6 +29,7 @@ func NewExpvarsSource(ports []string) *ExpvarsSource {
 	}
 }
 
+/*
 // ParseExpvar unmarshals data to Expvar variable.
 // TODO: implement Unmarshaller/Decode for Expvar
 func ParseExpvar(r io.Reader) (*Expvar, error) {
@@ -40,3 +42,4 @@ func ParseExpvar(r io.Reader) (*Expvar, error) {
 
 	return &vars, err
 }
+*/
