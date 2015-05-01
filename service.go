@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 
 	//"github.com/pyk/byten"
@@ -40,13 +42,18 @@ func (s *Service) Update() {
 	expvar, err := FetchExpvar(s.Addr())
 	s.Err = err
 
-	cmdline, err := expvar.GetStringArray("cmdline")
-	if err != nil {
-		s.Err = err
-	} else {
-		s.updateCmdline(cmdline)
+	// Update Cmdline & Name only once
+	if len(s.Cmdline) == 0 {
+		cmdline, err := expvar.GetStringArray("cmdline")
+		if err != nil {
+			s.Err = err
+		} else {
+			s.Cmdline = strings.Join(cmdline, " ")
+			s.Name = BaseCommand(cmdline)
+		}
 	}
 
+	// For all vars, fetch desired value from Json and push to it's own stack.
 	for name, stack := range s.values {
 		value, err := expvar.GetInt64(name.ToSlice()...)
 		if err != nil {
@@ -56,20 +63,22 @@ func (s *Service) Update() {
 	}
 }
 
-func (s *Service) updateCmdline(cmdline []string) {
-	// Update name and cmdline only if empty
-	// TODO: move it to Update() with sync.Once
-	if len(s.Cmdline) == 0 {
-		s.Cmdline = strings.Join(cmdline, " ")
-		s.Name = BaseCommand(cmdline)
-	}
-}
-
 // Addr returns fully qualified host:port pair for service.
 //
 // If host is not specified, 'localhost' is used.
 func (s Service) Addr() string {
-	return fmt.Sprintf("http://localhost:%s%s", s.Port, ExpvarsURL)
+	// Try as port only
+	_, err := strconv.Atoi(s.Port)
+	if err == nil {
+		return fmt.Sprintf("http://localhost:%s%s", s.Port, ExpvarsURL)
+	}
+
+	host, port, err := net.SplitHostPort(s.Port)
+	if err == nil {
+		return fmt.Sprintf("http://%s:%s%s", host, port, ExpvarsURL)
+	}
+
+	return ""
 }
 
 // StatusLine returns status line for services with it's name and status.
