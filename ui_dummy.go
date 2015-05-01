@@ -7,8 +7,13 @@ import (
 // DummyUI is an simple console UI mockup, for testing purposes.
 type DummyUI struct{}
 
+// Init implements UI.
 func (*DummyUI) Init(UIData) error { return nil }
-func (*DummyUI) Close()            {}
+
+// Close implements UI.
+func (*DummyUI) Close() {}
+
+// Update implements UI.
 func (*DummyUI) Update(data UIData) {
 	if data.Services == nil {
 		return

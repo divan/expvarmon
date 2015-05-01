@@ -32,6 +32,7 @@ func (t *TermUI) Init(data UIData) error {
 		p.TextFgColor = termui.ColorWhite
 		p.Border.Label = "Services Monitor"
 		p.Border.FgColor = termui.ColorCyan
+		t.Title.Text = fmt.Sprintf("monitoring %d services, press q to quit", len(data.Services))
 		return p
 	}()
 	t.Status = func() *termui.Par {
@@ -99,8 +100,8 @@ func (t *TermUI) Init(data UIData) error {
 	return nil
 }
 
+// Update updates UI widgets from UIData.
 func (t *TermUI) Update(data UIData) {
-	t.Title.Text = fmt.Sprintf("monitoring %d services, press q to quit", len(data.Services))
 	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format("15:04:05 02/Jan/06"))
 
 	var services []string

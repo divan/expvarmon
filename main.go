@@ -38,7 +38,9 @@ func main() {
 	if *dummy {
 		ui = &DummyUI{}
 	}
-	ui.Init(*data)
+	if err := ui.Init(*data); err != nil {
+		log.Fatal(err)
+	}
 	defer ui.Close()
 
 	tick := time.NewTicker(*interval)

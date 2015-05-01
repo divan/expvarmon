@@ -7,6 +7,7 @@ import (
 	//"github.com/pyk/byten"
 )
 
+// Services is just a slice of Service.
 type Services []*Service
 
 // Service represents constantly updating info about single service.
@@ -68,7 +69,7 @@ func (s *Service) updateCmdline(cmdline []string) {
 //
 // If host is not specified, 'localhost' is used.
 func (s Service) Addr() string {
-	return fmt.Sprintf("http://localhost:%s%s", s.Port, ExpvarsUrl)
+	return fmt.Sprintf("http://localhost:%s%s", s.Port, ExpvarsURL)
 }
 
 // StatusLine returns status line for services with it's name and status.
@@ -80,6 +81,7 @@ func (s Service) StatusLine() string {
 	return fmt.Sprintf("[R] %s", s.Name)
 }
 
+// Value returns current value for the given var of this service.
 func (s Service) Value(name VarName) string {
 	if s.Err != nil {
 		return "N/A"
@@ -95,6 +97,8 @@ func (s Service) Value(name VarName) string {
 	return fmt.Sprintf("%d", val.Front())
 }
 
+// Values returns slice of ints with recent values of the given var,
+// to be used with sparkline.
 func (s Service) Values(name VarName) []int {
 	if s.Err != nil {
 		return nil
