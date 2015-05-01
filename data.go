@@ -5,12 +5,12 @@ import "time"
 // UIData represents data to be passed to UI.
 type UIData struct {
 	Services      Services
-	Vars          []string
+	Vars          []VarName
 	LastTimestamp time.Time
 }
 
 // NewUIData inits and return new data object.
-func NewUIData(vars []string) *UIData {
+func NewUIData(vars []VarName) *UIData {
 	return &UIData{
 		Vars: vars,
 	}

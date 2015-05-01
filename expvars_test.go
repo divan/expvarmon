@@ -30,7 +30,7 @@ func TestExpvars(t *testing.T) {
 		t.Fatalf("Cmdline should have 3 items, but has %d", len(cmdline))
 	}
 
-	alloc, err := expvar.GetInt64(dot2slice("memstats.Alloc")...)
+	alloc, err := expvar.GetInt64(VarName("memstats.Alloc").ToSlice()...)
 	if err != nil {
 		t.Fatal(err)
 	}

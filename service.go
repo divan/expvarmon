@@ -15,16 +15,16 @@ type Service struct {
 	Name    string
 	Cmdline string
 
-	values map[string]*Stack
+	values map[VarName]*Stack
 
 	Err error
 }
 
 // NewService returns new Service object.
-func NewService(port string, vars []string) *Service {
-	values := make(map[string]*Stack)
+func NewService(port string, vars []VarName) *Service {
+	values := make(map[VarName]*Stack)
 	for _, name := range vars {
-		values[name] = NewStack()
+		values[VarName(name)] = NewStack()
 	}
 	return &Service{
 		Name: port, // we have only port on start, so use it as name until resolved
@@ -47,7 +47,7 @@ func (s *Service) Update() {
 	}
 
 	for name, stack := range s.values {
-		value, err := expvar.GetInt64(dot2slice(name)...)
+		value, err := expvar.GetInt64(name.ToSlice()...)
 		if err != nil {
 			continue
 		}
@@ -80,11 +80,11 @@ func (s Service) StatusLine() string {
 	return fmt.Sprintf("[R] %s", s.Name)
 }
 
-func (s Service) Value(key string) string {
+func (s Service) Value(name VarName) string {
 	if s.Err != nil {
 		return "N/A"
 	}
-	val, ok := s.values[key]
+	val, ok := s.values[name]
 	if !ok {
 		return "N/A"
 	}
@@ -92,16 +92,14 @@ func (s Service) Value(key string) string {
 		return "N/A"
 	}
 
-	//allocated := byten.Size(int64(val.Front()))
-	//return fmt.Sprintf("Alloc: %s", allocated)
 	return fmt.Sprintf("%d", val.Front())
 }
 
-func (s Service) Values(key string) []int {
+func (s Service) Values(name VarName) []int {
 	if s.Err != nil {
 		return nil
 	}
-	val, ok := s.values[key]
+	val, ok := s.values[name]
 	if !ok {
 		return nil
 	}

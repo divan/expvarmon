@@ -26,9 +26,4 @@ func TestUtils(t *testing.T) {
 	if len(vars) != 4 {
 		t.Fatalf("vars should contain 4 elements, but has %d", len(vars))
 	}
-
-	strs := dot2slice("memstats.Alloc")
-	if len(strs) != 2 || strs[0] != "memstats" || strs[1] != "Alloc" {
-		t.Fatalf("dot2slice wrong err: %v", strs)
-	}
 }

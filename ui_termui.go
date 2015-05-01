@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/divan/termui"
 )
@@ -12,17 +11,18 @@ type TermUI struct {
 	Title        *termui.Par
 	Status       *termui.Par
 	Services     *termui.List
-	Values       map[string]*termui.List
+	Lists        map[VarName]*termui.List
 	MemSparkline *termui.Sparklines
 }
 
-func (t *TermUI) Init(data UIData) {
+// Init creates widgets, sets sizes and labels.
+func (t *TermUI) Init(data UIData) error {
 	err := termui.Init()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	t.Values = make(map[string]*termui.List)
+	t.Lists = make(map[VarName]*termui.List)
 
 	termui.UseTheme("helloworld")
 
@@ -51,13 +51,13 @@ func (t *TermUI) Init(data UIData) {
 	}()
 
 	for _, name := range data.Vars {
-		_, ok := t.Values[name]
+		_, ok := t.Lists[name]
 		if !ok {
 			list := termui.NewList()
 			list.ItemFgColor = termui.ColorBlue | termui.AttrBold
-			list.Border.Label = name
+			list.Border.Label = name.Short()
 			list.Height = len(data.Services) + 2
-			t.Values[name] = list
+			t.Lists[name] = list
 		}
 	}
 
@@ -78,22 +78,25 @@ func (t *TermUI) Init(data UIData) {
 		return s
 	}()
 
-	col := termui.NewCol(2, 0, t.Services)
-	col1 := termui.NewCol(3, 0, t.Values[data.Vars[0]])
-	col2 := termui.NewCol(3, 0, t.Values[data.Vars[1]])
-	col3 := termui.NewCol(2, 0, t.Values[data.Vars[2]])
-	col4 := termui.NewCol(2, 0, t.Values[data.Vars[3]])
-	valuesRow := termui.NewRow(col, col1, col2, col3, col4)
+	cellW, firstW := calculateCellWidth(len(data.Vars) + 1)
+	col := termui.NewCol(firstW, 0, t.Services)
+	cols := []*termui.Row{col}
+	for _, name := range data.Vars {
+		cols = append(cols, termui.NewCol(cellW, 0, t.Lists[name]))
+	}
+	listsRow := termui.NewRow(cols...)
+
 	termui.Body.AddRows(
 		termui.NewRow(
 			termui.NewCol(6, 0, t.Title),
 			termui.NewCol(6, 0, t.Status)),
-		valuesRow,
-		termui.NewRow(
-			termui.NewCol(12, 0, t.MemSparkline)),
+		listsRow,
+		termui.NewRow(termui.NewCol(12, 0, t.MemSparkline)),
 	)
 
 	termui.Body.Align()
+
+	return nil
 }
 
 func (t *TermUI) Update(data UIData) {
@@ -111,7 +114,7 @@ func (t *TermUI) Update(data UIData) {
 		for _, service := range data.Services {
 			lines = append(lines, service.Value(name))
 		}
-		t.Values[name].Items = lines
+		t.Lists[name].Items = lines
 	}
 
 	// Sparklines
@@ -125,6 +128,18 @@ func (t *TermUI) Update(data UIData) {
 	termui.Render(termui.Body)
 }
 
+// Close shuts down UI module.
 func (t *TermUI) Close() {
 	termui.Close()
+}
+
+// GridSz defines grid size used in TermUI
+const GridSz = 12
+
+// calculateCellWidth does some heuristics to calculate optimal cells width
+// for all cells, and adjust first width (with service names) if needed.
+func calculateCellWidth(num int) (cellW int, firstW int) {
+	cellW = GridSz / num
+	firstW = cellW + (GridSz - (num * cellW))
+	return
 }
