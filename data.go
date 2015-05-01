@@ -2,23 +2,20 @@ package main
 
 import "time"
 
-// Data represents data to be passed to UI.
-type Data struct {
+// UIData represents data to be passed to UI.
+type UIData struct {
 	Services      Services
 	Total         int
-	TotalMemory   *Stack
 	LastTimestamp time.Time
 }
 
 // NewData inits and return new data object.
-func NewData() *Data {
-	return &Data{
-		TotalMemory: NewStack(140),
-	}
+func NewData() *UIData {
+	return &UIData{}
 }
 
 // FindService returns existing service by port.
-func (d *Data) FindService(port string) *Service {
+func (d *UIData) FindService(port string) *Service {
 	if d.Services == nil {
 		return nil
 	}

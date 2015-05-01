@@ -16,7 +16,7 @@ type TermUI struct {
 	MemSparkline *termui.Sparklines
 }
 
-func (t *TermUI) Init(data Data) {
+func (t *TermUI) Init(data UIData) {
 	err := termui.Init()
 	if err != nil {
 		log.Fatal(err)
@@ -83,7 +83,7 @@ func (t *TermUI) Init(data Data) {
 	termui.Body.Align()
 }
 
-func (t *TermUI) Update(data Data) {
+func (t *TermUI) Update(data UIData) {
 	t.Title.Text = fmt.Sprintf("monitoring %d services, press q to quit", data.Total)
 	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format("15:04:05 02/Jan/06"))
 
