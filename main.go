@@ -3,17 +3,17 @@ package main
 import (
 	"flag"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/divan/termui"
 )
 
 var (
-	interval    = flag.Duration("i", 5*time.Second, "Polling interval")
-	portsArg    = flag.String("ports", "40001,40002,40000,40004,1233,1234,1235", "Ports for accessing services expvars")
-	defaultVars = flag.String("vars", "memstats.Alloc,memstats.Sys", "Default vars to monitor")
-	extraVars   = flag.String("extravars", "", "Comma-separated extra vars exported with expvars")
-	dummy       = flag.Bool("dummy", false, "Use dummy (console) output")
+	interval = flag.Duration("i", 5*time.Second, "Polling interval")
+	portsArg = flag.String("ports", "1234", "Ports for accessing services expvars")
+	varsArg  = flag.String("vars", "memstats.Alloc,memstats.Sys", "Default vars to monitor")
+	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
 )
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 		log.Fatal("cannot parse ports:", err)
 	}
 
-	vars, err := ParseVars(*defaultVars, *extraVars)
+	vars, err := ParseVars(*varsArg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,25 +46,11 @@ func main() {
 	tick := time.NewTicker(*interval)
 	evtCh := termui.EventCh()
 
-	update := func() {
-		for _, port := range ports {
-			service := data.FindService(port)
-			if service == nil {
-				continue
-			}
-
-			service.Update()
-		}
-
-		data.LastTimestamp = time.Now()
-
-		ui.Update(*data)
-	}
-	update()
+	UpdateAll(ui, data)
 	for {
 		select {
 		case <-tick.C:
-			update()
+			UpdateAll(ui, data)
 		case e := <-evtCh:
 			if e.Type == termui.EventKey && e.Ch == 'q' {
 				return
@@ -75,4 +61,18 @@ func main() {
 			}
 		}
 	}
+}
+
+// UpdateAll collects data from expvars and refreshes UI.
+func UpdateAll(ui UI, data *UIData) {
+	var wg sync.WaitGroup
+	for _, service := range data.Services {
+		wg.Add(1)
+		go service.Update(&wg)
+	}
+	wg.Wait()
+
+	data.LastTimestamp = time.Now()
+
+	ui.Update(*data)
 }

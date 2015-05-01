@@ -7,22 +7,15 @@ import (
 
 // ParseVars returns parsed and validated slice of strings with
 // variables names that will be used for monitoring.
-func ParseVars(def, extra string) ([]VarName, error) {
-	if def == "" && extra == "" {
+func ParseVars(vars string) ([]VarName, error) {
+	if vars == "" {
 		return nil, errors.New("no vars specified")
 	}
 
-	fields := func(s string) []VarName {
-		ss := strings.FieldsFunc(s, func(r rune) bool { return r == ',' })
-		ret := []VarName{}
-		for _, str := range ss {
-			ret = append(ret, VarName(str))
-		}
-		return ret
-	}
-
+	ss := strings.FieldsFunc(vars, func(r rune) bool { return r == ',' })
 	var ret []VarName
-	ret = append(ret, fields(def)...)
-	ret = append(ret, fields(extra)...)
+	for _, s := range ss {
+		ret = append(ret, VarName(s))
+	}
 	return ret, nil
 }

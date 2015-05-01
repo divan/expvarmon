@@ -5,10 +5,8 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 )
-
-// Services is just a slice of Service.
-type Services []*Service
 
 // Service represents constantly updating info about single service.
 type Service struct {
@@ -36,7 +34,8 @@ func NewService(port string, vars []VarName) *Service {
 }
 
 // Update updates Service info from Expvar variable.
-func (s *Service) Update() {
+func (s *Service) Update(wg *sync.WaitGroup) {
+	defer wg.Done()
 	expvar, err := FetchExpvar(s.Addr())
 	s.Err = err
 

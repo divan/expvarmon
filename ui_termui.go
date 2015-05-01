@@ -74,7 +74,7 @@ func (t *TermUI) Init(data UIData) error {
 		s := termui.NewSparklines(sparklines...)
 		s.Height = 2*len(data.Services) + 2
 		s.HasBorder = true
-		s.Border.Label = fmt.Sprintf("Sparklines for %s", data.Vars[0])
+		s.Border.Label = fmt.Sprintf("Monitoring %s", data.Vars[0])
 		return s
 	}()
 
