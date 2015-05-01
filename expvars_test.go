@@ -59,11 +59,11 @@ func TestExpvarsAdvanced(t *testing.T) {
 		t.Fatalf("Expecting 'goroutines' to be %d, but got %d", 10, goroutines)
 	}
 
-	counter_a, err := expvar.GetFloat64(VarName("counters.A").ToSlice()...)
+	counterA, err := expvar.GetFloat64(VarName("counters.A").ToSlice()...)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if counter_a != 123.12 {
-		t.Fatalf("Expecting 'counters.A' to be %f, but got %f", 123.12, counter_a)
+	if counterA != 123.12 {
+		t.Fatalf("Expecting 'counters.A' to be %f, but got %f", 123.12, counterA)
 	}
 }
