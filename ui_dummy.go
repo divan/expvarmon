@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 // DummyUI is an simple console UI mockup, for testing purposes.
@@ -18,6 +19,7 @@ func (*DummyUI) Update(data UIData) {
 	if data.Services == nil {
 		return
 	}
+	fmt.Println(time.Now().Format("15:04:05 02/01"))
 	for _, service := range data.Services {
 		fmt.Printf("%s: ", service.Name)
 		if service.Err != nil {
@@ -25,11 +27,10 @@ func (*DummyUI) Update(data UIData) {
 			continue
 		}
 
-		/*
-			if service.Goroutines != 0 {
-				fmt.Printf("goroutines: %d", service.Goroutines)
-			}
-		*/
+		for _, name := range data.Vars {
+			fmt.Printf("%s: %v, ", name.Short(), service.Value(name))
+		}
+
 		fmt.Printf("\n")
 	}
 }
