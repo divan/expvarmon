@@ -28,10 +28,11 @@ func FetchExpvar(addr string) (*Expvar, error) {
 		return e, errors.New("Vars not found. Did you import expvars?")
 	}
 
-	e, err = ParseExpvar(resp.Body)
+	expvar, err := ParseExpvar(resp.Body)
 	if err != nil {
 		return e, err
 	}
+	e = expvar
 	return e, nil
 }
 
