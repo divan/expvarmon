@@ -104,12 +104,14 @@ func (t *TermUI) Update(data UIData) {
 	t.Title.Text = fmt.Sprintf("monitoring %d services, press q to quit", len(data.Services))
 	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format("15:04:05 02/Jan/06"))
 
+	// List with service names
 	var services []string
 	for _, service := range data.Services {
 		services = append(services, service.StatusLine())
 	}
 	t.Services.Items = services
 
+	// Lists with values
 	for _, name := range data.Vars {
 		var lines []string
 		for _, service := range data.Services {
@@ -119,9 +121,10 @@ func (t *TermUI) Update(data UIData) {
 	}
 
 	// Sparklines
+	topVar := data.Vars[0]
 	for i, service := range data.Services {
 		t.MemSparkline.Lines[i].Title = service.Name
-		t.MemSparkline.Lines[i].Data = service.Values(data.Vars[0])
+		t.MemSparkline.Lines[i].Data = service.Values(topVar)
 	}
 
 	termui.Body.Width = termui.TermWidth()

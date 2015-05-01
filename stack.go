@@ -8,7 +8,7 @@ const DefaultSize = 1200
 
 // Stack is a limited FIFO for holding sparkline values.
 type Stack struct {
-	Values []int
+	Values []interface{}
 	Len    int
 }
 
@@ -20,13 +20,13 @@ func NewStack() *Stack {
 // NewStackWithSize inits new Stack with size limit.
 func NewStackWithSize(size int) *Stack {
 	return &Stack{
-		Values: make([]int, size),
+		Values: make([]interface{}, size),
 		Len:    size,
 	}
 }
 
 // Push inserts data to stack, preserving constant length.
-func (s *Stack) Push(val int) {
+func (s *Stack) Push(val interface{}) {
 	s.Values = append(s.Values, val)
 	if len(s.Values) > s.Len {
 		s.Values = s.Values[1:]
@@ -34,9 +34,33 @@ func (s *Stack) Push(val int) {
 }
 
 // Front returns front value.
-func (s *Stack) Front() int {
+func (s *Stack) Front() interface{} {
 	if len(s.Values) == 0 {
-		return 0
+		return nil
 	}
 	return s.Values[len(s.Values)-1]
+}
+
+// IntValues returns stack values explicitly casted to int.
+//
+// Main case is to use with termui.Sparklines.
+func (s *Stack) IntValues() []int {
+	ret := make([]int, s.Len)
+	for i, v := range s.Values {
+		n, ok := v.(int64)
+		if ok {
+			ret[i] = int(n)
+			continue
+		}
+
+		b, ok := v.(bool)
+		if ok {
+			if b {
+				ret[i] = 1
+			} else {
+				ret[i] = 0
+			}
+		}
+	}
+	return ret
 }

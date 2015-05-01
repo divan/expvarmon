@@ -21,7 +21,7 @@ func TestStack(t *testing.T) {
 		}
 	}
 
-	if s.Front() != 14 {
+	if s.Front().(int) != 14 {
 		t.Fatalf("Front returns wrong value: expecting %d, got %d", 14, s.Front())
 	}
 }

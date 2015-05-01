@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/antonholmquist/jason"
 )
 
 // Service represents constantly updating info about single service.
@@ -52,12 +54,29 @@ func (s *Service) Update(wg *sync.WaitGroup) {
 
 	// For all vars, fetch desired value from Json and push to it's own stack.
 	for name, stack := range s.values {
-		value, err := expvar.GetInt64(name.ToSlice()...)
+		value, err := expvar.GetValue(name.ToSlice()...)
 		if err != nil {
 			continue
 		}
-		stack.Push(int(value))
+		v := guessValue(value)
+		if v != nil {
+			stack.Push(v)
+		}
 	}
+}
+
+func guessValue(value *jason.Value) interface{} {
+	if v, err := value.Int64(); err == nil {
+		return v
+	} else if v, err := value.Float64(); err == nil {
+		return v
+	} else if v, err := value.Boolean(); err == nil {
+		return v
+	} else if v, err := value.String(); err == nil {
+		return v
+	}
+
+	return nil
 }
 
 // Addr returns fully qualified host:port pair for service.
@@ -96,23 +115,23 @@ func (s Service) Value(name VarName) string {
 	if !ok {
 		return "N/A"
 	}
-	if val.Front() == 0 {
+	if val.Front() == nil {
 		return "N/A"
 	}
 
-	return fmt.Sprintf("%d", val.Front())
+	return fmt.Sprintf("%v", val.Front())
 }
 
-// Values returns slice of ints with recent values of the given var,
-// to be used with sparkline.
+// Values returns slice of ints with recent
+// values of the given var, to be used with sparkline.
 func (s Service) Values(name VarName) []int {
 	if s.Err != nil {
 		return nil
 	}
-	val, ok := s.values[name]
+	stack, ok := s.values[name]
 	if !ok {
 		return nil
 	}
 
-	return val.Values
+	return stack.IntValues()
 }
