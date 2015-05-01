@@ -56,9 +56,7 @@ func FetchExpvar(addr string) (*jason.Object, error) {
 // Update updates Service info from Expvar variable.
 func (s *Service) Update() {
 	expvar, err := FetchExpvar(s.Addr())
-	if err != nil {
-		s.Err = err
-	}
+	s.Err = err
 
 	cmdline, err := expvar.GetStringArray("cmdline")
 	if err != nil {
@@ -70,6 +68,7 @@ func (s *Service) Update() {
 	alloc, err := expvar.GetInt64("memstats", "Alloc")
 	if err != nil {
 		s.Err = err
+		s.updateMem(0)
 	} else {
 		s.updateMem(alloc)
 	}
