@@ -9,10 +9,11 @@ import (
 )
 
 var (
-	interval  = flag.Duration("i", 1*time.Second, "Polling interval")
-	portsArg  = flag.String("ports", "40001,40002,40000,40004,1233,1234,1235", "Ports for accessing services expvars")
-	extraVars = flag.String("extravars", "Goroutines,Counters.A", "Extra vars exported with expvars package")
-	dummy     = flag.Bool("dummy", false, "Use dummy (console) output")
+	interval    = flag.Duration("i", 1*time.Second, "Polling interval")
+	portsArg    = flag.String("ports", "40001,40002,40000,40004,1233,1234,1235", "Ports for accessing services expvars")
+	defaultVars = flag.String("vars", "memstats.Alloc,memstats.Sys", "Default vars to monitor")
+	extraVars   = flag.String("extravars", "Goroutines,Counters.A", "Extra vars exported with expvars package")
+	dummy       = flag.Bool("dummy", false, "Use dummy (console) output")
 )
 
 func main() {
@@ -22,26 +23,29 @@ func main() {
 		log.Fatal("cannot parse ports:", err)
 	}
 
-	data := *NewData()
-	var source = NewExpvarsSource(ports)
+	vars, err := ParseVars(*defaultVars, *extraVars)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data := NewUIData(vars)
 	for _, port := range ports {
-		service := NewService(port)
+		service := NewService(port, vars)
 		data.Services = append(data.Services, service)
 	}
-	data.Total = len(data.Services)
 
 	var ui UI = &TermUI{}
 	if *dummy {
 		ui = &DummyUI{}
 	}
-	ui.Init(data)
+	ui.Init(*data)
 	defer ui.Close()
 
 	tick := time.NewTicker(*interval)
 	evtCh := termui.EventCh()
 
 	update := func() {
-		for _, port := range source.Ports {
+		for _, port := range ports {
 			service := data.FindService(port)
 			if service == nil {
 				continue
@@ -52,7 +56,7 @@ func main() {
 
 		data.LastTimestamp = time.Now()
 
-		ui.Update(data)
+		ui.Update(*data)
 	}
 	update()
 	for {

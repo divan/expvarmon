@@ -17,16 +17,26 @@ func TestExpvars(t *testing.T) {
 	}
 	defer file.Close()
 
-	/*
-		vars, err := ParseExpvar(file)
-		if err != nil {
-			t.Fatal(err)
-		}
+	expvar, err := ParseExpvar(file)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		if len(vars.Cmdline) != 3 {
-			t.Fatalf("Cmdline should have 3 items, but has %d", len(vars.Cmdline))
-		}
-	*/
+	cmdline, err := expvar.GetStringArray("cmdline")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cmdline) != 3 {
+		t.Fatalf("Cmdline should have 3 items, but has %d", len(cmdline))
+	}
+
+	alloc, err := expvar.GetInt64(dot2slice("memstats.Alloc")...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if alloc == 0 {
+		t.Fatalf("Alloc should be greater than 0")
+	}
 }
 
 func TestExpvarsAdvanced(t *testing.T) {

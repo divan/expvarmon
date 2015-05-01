@@ -5,13 +5,15 @@ import "time"
 // UIData represents data to be passed to UI.
 type UIData struct {
 	Services      Services
-	Total         int
+	Vars          []string
 	LastTimestamp time.Time
 }
 
-// NewData inits and return new data object.
-func NewData() *UIData {
-	return &UIData{}
+// NewUIData inits and return new data object.
+func NewUIData(vars []string) *UIData {
+	return &UIData{
+		Vars: vars,
+	}
 }
 
 // FindService returns existing service by port.

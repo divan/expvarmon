@@ -1,13 +1,24 @@
 package main
 
+// DefaultSize specifies maximum number of items in stack.
+//
+// Values should be enough for sparklines on high-res terminals
+// with minimal font size.
+const DefaultSize = 1200
+
 // Stack is a limited FIFO for holding sparkline values.
 type Stack struct {
 	Values []int
 	Len    int
 }
 
-// NewStack inits new Stack with size limit.
-func NewStack(size int) *Stack {
+// NewStack inits new Stack with default size limit.
+func NewStack() *Stack {
+	return NewStackWithSize(DefaultSize)
+}
+
+// NewStackWithSize inits new Stack with size limit.
+func NewStackWithSize(size int) *Stack {
 	return &Stack{
 		Values: make([]int, size),
 		Len:    size,

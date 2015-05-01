@@ -12,7 +12,7 @@ type TermUI struct {
 	Title        *termui.Par
 	Status       *termui.Par
 	Services     *termui.List
-	Meminfo      *termui.List
+	Values       map[string]*termui.List
 	MemSparkline *termui.Sparklines
 }
 
@@ -21,6 +21,8 @@ func (t *TermUI) Init(data UIData) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	t.Values = make(map[string]*termui.List)
 
 	termui.UseTheme("helloworld")
 
@@ -41,17 +43,24 @@ func (t *TermUI) Init(data UIData) {
 		return p
 	}()
 	t.Services = func() *termui.List {
-		l := termui.NewList()
-		l.ItemFgColor = termui.ColorGreen
-		l.Border.Label = "Services"
-		return l
+		list := termui.NewList()
+		list.ItemFgColor = termui.ColorGreen
+		list.Border.Label = "Services"
+		list.Height = len(data.Services) + 2
+		return list
 	}()
-	t.Meminfo = func() *termui.List {
-		l := termui.NewList()
-		l.ItemFgColor = termui.ColorBlue | termui.AttrBold
-		l.Border.Label = "Memory Usage"
-		return l
-	}()
+
+	for _, name := range data.Vars {
+		_, ok := t.Values[name]
+		if !ok {
+			list := termui.NewList()
+			list.ItemFgColor = termui.ColorBlue | termui.AttrBold
+			list.Border.Label = name
+			list.Height = len(data.Services) + 2
+			t.Values[name] = list
+		}
+	}
+
 	t.MemSparkline = func() *termui.Sparklines {
 		var sparklines []termui.Sparkline
 		for _, service := range data.Services {
@@ -63,19 +72,23 @@ func (t *TermUI) Init(data UIData) {
 		}
 
 		s := termui.NewSparklines(sparklines...)
-		s.Height = 2*data.Total + 2
+		s.Height = 2*len(data.Services) + 2
 		s.HasBorder = true
 		s.Border.Label = "Memory Track"
 		return s
 	}()
 
+	col := termui.NewCol(2, 0, t.Services)
+	col1 := termui.NewCol(3, 0, t.Values[data.Vars[0]])
+	col2 := termui.NewCol(3, 0, t.Values[data.Vars[1]])
+	col3 := termui.NewCol(2, 0, t.Values[data.Vars[2]])
+	col4 := termui.NewCol(2, 0, t.Values[data.Vars[3]])
+	valuesRow := termui.NewRow(col, col1, col2, col3, col4)
 	termui.Body.AddRows(
 		termui.NewRow(
 			termui.NewCol(6, 0, t.Title),
 			termui.NewCol(6, 0, t.Status)),
-		termui.NewRow(
-			termui.NewCol(3, 0, t.Services),
-			termui.NewCol(9, 0, t.Meminfo)),
+		valuesRow,
 		termui.NewRow(
 			termui.NewCol(12, 0, t.MemSparkline)),
 	)
@@ -84,76 +97,32 @@ func (t *TermUI) Init(data UIData) {
 }
 
 func (t *TermUI) Update(data UIData) {
-	t.Title.Text = fmt.Sprintf("monitoring %d services, press q to quit", data.Total)
+	t.Title.Text = fmt.Sprintf("monitoring %d services, press q to quit", len(data.Services))
 	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format("15:04:05 02/Jan/06"))
 
 	var services []string
-	var meminfos []string
 	for _, service := range data.Services {
 		services = append(services, service.StatusLine())
-		meminfos = append(meminfos, service.Value("mem.alloc"))
 	}
 	t.Services.Items = services
-	t.Services.Height = data.Total + 2
 
-	t.Meminfo.Items = meminfos
-	t.Meminfo.Height = data.Total + 2
+	for _, name := range data.Vars {
+		var lines []string
+		for _, service := range data.Services {
+			lines = append(lines, service.Value(name))
+		}
+		t.Values[name].Items = lines
+	}
 
 	// Sparklines
 	for i, service := range data.Services {
 		t.MemSparkline.Lines[i].Title = service.Name
-		t.MemSparkline.Lines[i].Data = service.Values("mem.alloc")
+		t.MemSparkline.Lines[i].Data = service.Values("memstats.Alloc")
 	}
 
 	termui.Body.Width = termui.TermWidth()
 	termui.Body.Align()
 	termui.Render(termui.Body)
-	/*
-
-		goroutines := termui.NewList()
-		goroutines.Y = 3
-		goroutines.X = meminfo.X + meminfo.Width
-		goroutines.Width = termui.TermWidth() - goroutines.X
-		goroutines.Height = total + 2
-		goroutines.ItemFgColor = termui.ColorGreen
-		goroutines.Border.Label = "Goroutines"
-
-		var totalAlloc int64
-		for _, service := range data.Services {
-			if service.Err != nil {
-				names.Items = append(names.Items, fmt.Sprintf("[ERR] %s failed", service.Name))
-				meminfo.Items = append(meminfo.Items, "N/A")
-				goroutines.Items = append(goroutines.Items, "N/A")
-				continue
-			}
-			alloc := byten.Size(int64(service.MemStats.Alloc))
-			heap := byten.Size(int64(service.MemStats.HeapAlloc))
-			totalAlloc += int64(service.MemStats.Alloc)
-
-			name := fmt.Sprintf("[R] %s", service.Name)
-			meminfos := fmt.Sprintf("%s/%s", alloc, heap)
-
-			names.Items = append(names.Items, name)
-			meminfo.Items = append(meminfo.Items, meminfos)
-		}
-
-
-		data.TotalMemory.Push(int(totalAlloc / 1024))
-
-		spl3 := termui.NewSparkline()
-		spl3.Data = data.TotalMemory.Values
-		spl3.Height = termui.TermHeight() - 3 - (total + 2) - 3
-		spl3.LineColor = termui.ColorYellow
-
-		spls2 := termui.NewSparklines(spl3)
-		spls2.Y = 3 + (total + 2)
-		spls2.Height = termui.TermHeight() - spls2.Y
-		spls2.Width = termui.TermWidth()
-		spls2.Border.FgColor = termui.ColorCyan
-		spls2.Border.Label = fmt.Sprintf("Total Memory Usage: %s", byten.Size(totalAlloc))
-
-		termui.Render(p, p1, names, meminfo, goroutines, spls2, spls)
-	*/
 }
 
 func (t *TermUI) Close() {

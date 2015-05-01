@@ -1,12 +1,9 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 
-	"github.com/antonholmquist/jason"
 	//"github.com/pyk/byten"
 )
 
@@ -24,33 +21,17 @@ type Service struct {
 }
 
 // NewService returns new Service object.
-func NewService(port string) *Service {
+func NewService(port string, vars []string) *Service {
+	values := make(map[string]*Stack)
+	for _, name := range vars {
+		values[name] = NewStack()
+	}
 	return &Service{
 		Name: port, // we have only port on start, so use it as name until resolved
 		Port: port,
 
-		values: make(map[string]*Stack),
+		values: values,
 	}
-}
-
-// FetchExpvar fetches expvar by http for the given addr (host:port)
-func FetchExpvar(addr string) (*jason.Object, error) {
-	var e jason.Object
-	resp, err := http.Get(addr)
-	if err != nil {
-		return &e, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusNotFound {
-		return &e, errors.New("Vars not found. Did you import expvars?")
-	} else {
-		expvar, err := jason.NewObjectFromReader(resp.Body)
-		e = *expvar
-		if err != nil {
-			return &e, err
-		}
-	}
-	return &e, nil
 }
 
 // Update updates Service info from Expvar variable.
@@ -65,31 +46,22 @@ func (s *Service) Update() {
 		s.updateCmdline(cmdline)
 	}
 
-	alloc, err := expvar.GetInt64("memstats", "Alloc")
-	if err != nil {
-		s.Err = err
-		s.updateMem(0)
-	} else {
-		s.updateMem(alloc)
+	for name, stack := range s.values {
+		value, err := expvar.GetInt64(dot2slice(name)...)
+		if err != nil {
+			continue
+		}
+		stack.Push(int(value))
 	}
 }
 
 func (s *Service) updateCmdline(cmdline []string) {
 	// Update name and cmdline only if empty
+	// TODO: move it to Update() with sync.Once
 	if len(s.Cmdline) == 0 {
 		s.Cmdline = strings.Join(cmdline, " ")
 		s.Name = BaseCommand(cmdline)
 	}
-}
-
-func (s *Service) updateMem(alloc int64) {
-	// Put metrics data
-	mem, ok := s.values["mem.alloc"]
-	if !ok {
-		s.values["mem.alloc"] = NewStack(1200)
-		mem = s.values["mem.alloc"]
-	}
-	mem.Push(int(alloc))
 }
 
 // Addr returns fully qualified host:port pair for service.

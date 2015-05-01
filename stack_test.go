@@ -4,7 +4,7 @@ import "testing"
 
 func TestStack(t *testing.T) {
 	size := 10
-	s := NewStack(size)
+	s := NewStackWithSize(size)
 
 	for i := 0; i < size+5; i++ {
 		s.Push(i)
