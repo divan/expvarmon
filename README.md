@@ -8,5 +8,5 @@ Go apps console monitoring tool. Minimal configuration efforts. Quick and fast m
 
 ## Demo
 
-<img src="./demo/demo.ong" alt="demo" width="600">
+<img src="./demo/demo.png" alt="demo" width="600">
 
