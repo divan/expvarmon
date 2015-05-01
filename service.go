@@ -5,8 +5,6 @@ import (
 	"net"
 	"strconv"
 	"strings"
-
-	//"github.com/pyk/byten"
 )
 
 // Services is just a slice of Service.

@@ -74,7 +74,7 @@ func (t *TermUI) Init(data UIData) error {
 		s := termui.NewSparklines(sparklines...)
 		s.Height = 2*len(data.Services) + 2
 		s.HasBorder = true
-		s.Border.Label = "Memory Track"
+		s.Border.Label = fmt.Sprintf("Sparklines for %s", data.Vars[0])
 		return s
 	}()
 
@@ -121,7 +121,7 @@ func (t *TermUI) Update(data UIData) {
 	// Sparklines
 	for i, service := range data.Services {
 		t.MemSparkline.Lines[i].Title = service.Name
-		t.MemSparkline.Lines[i].Data = service.Values("memstats.Alloc")
+		t.MemSparkline.Lines[i].Data = service.Values(data.Vars[0])
 	}
 
 	termui.Body.Width = termui.TermWidth()
