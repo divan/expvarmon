@@ -34,10 +34,16 @@ func main() {
 		data.Services = append(data.Services, service)
 	}
 
-	var ui UI = &TermUI{}
+	var ui UI
+	if len(data.Services) > 1 {
+		ui = &TermUI{}
+	} else {
+		ui = &TermUISingle{}
+	}
 	if *dummy {
 		ui = &DummyUI{}
 	}
+
 	if err := ui.Init(*data); err != nil {
 		log.Fatal(err)
 	}
