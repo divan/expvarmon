@@ -154,7 +154,7 @@ func StatusLine(s *Service) string {
 	return fmt.Sprintf("[R] %s", s.Name)
 }
 
-func colorByKind(kind varKind) termui.Attribute {
+func colorByKind(kind VarKind) termui.Attribute {
 	switch kind {
 	case KindMemory:
 		return termui.ColorRed | termui.AttrBold
