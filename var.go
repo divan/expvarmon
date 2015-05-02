@@ -95,5 +95,9 @@ func Format(v VarValue, kind VarKind) string {
 		return fmt.Sprintf("%s", time.Duration(v.(int64)))
 	}
 
+	if f, ok := v.(float64); ok {
+		return fmt.Sprintf("%.2f", f)
+	}
+
 	return fmt.Sprintf("%v", v)
 }
