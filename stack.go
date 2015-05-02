@@ -53,8 +53,16 @@ func (s *Stack) IntValues() []int {
 			continue
 		}
 
+		f, ok := v.(float64)
+		if ok {
+			// 12.34 (float) -> 1234 (int)
+			ret[i] = int(f * 100)
+			continue
+		}
+
 		b, ok := v.(bool)
 		if ok {
+			// false => 0, true = 1
 			if b {
 				ret[i] = 1
 			} else {
