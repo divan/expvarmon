@@ -62,7 +62,7 @@ func (t *TermUI) Init(data UIData) error {
 		_, ok := t.Lists[name]
 		if !ok {
 			list := termui.NewList()
-			list.ItemFgColor = termui.ColorBlue | termui.AttrBold
+			list.ItemFgColor = colorByKind(name.Kind())
 			list.Border.Label = name.Short()
 			list.Height = len(data.Services) + 2
 			t.Lists[name] = list
@@ -152,6 +152,17 @@ func StatusLine(s *Service) string {
 	}
 
 	return fmt.Sprintf("[R] %s", s.Name)
+}
+
+func colorByKind(kind varKind) termui.Attribute {
+	switch kind {
+	case KindMemory:
+		return termui.ColorRed | termui.AttrBold
+	case KindDuration:
+		return termui.ColorYellow | termui.AttrBold
+	default:
+		return termui.ColorBlue | termui.AttrBold
+	}
 }
 
 // GridSz defines grid size used in TermUI
