@@ -87,12 +87,8 @@ func (t *TermUISingle) Update(data UIData) {
 		}
 		spl := &t.Sparkline.Lines[i]
 
-		var maxStr string
-		max := service.Max(name)
-		if max != nil {
-			maxStr = fmt.Sprintf(" (max: %v)", max)
-		}
-		spl.Title = fmt.Sprintf("%s: %v%s", name.Long(), service.Value(name), maxStr)
+		max := formatMax(service.Max(name))
+		spl.Title = fmt.Sprintf("%s: %v%s", name.Long(), service.Value(name), max)
 		spl.TitleColor = colorByKind(name.Kind())
 		spl.LineColor = colorByKind(name.Kind())
 		spl.Data = service.Values(name)
@@ -106,4 +102,12 @@ func (t *TermUISingle) Update(data UIData) {
 // Close shuts down UI module.
 func (t *TermUISingle) Close() {
 	termui.Close()
+}
+
+func formatMax(max interface{}) string {
+	var str string
+	if max != nil {
+		str = fmt.Sprintf(" (max: %v)", max)
+	}
+	return str
 }

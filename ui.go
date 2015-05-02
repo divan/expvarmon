@@ -16,11 +16,12 @@ type UI interface {
 
 // TermUI is a termUI implementation of UI interface.
 type TermUI struct {
-	Title        *termui.Par
-	Status       *termui.Par
-	Services     *termui.List
-	Lists        map[VarName]*termui.List
-	MemSparkline *termui.Sparklines
+	Title      *termui.Par
+	Status     *termui.Par
+	Services   *termui.List
+	Lists      map[VarName]*termui.List
+	Sparkline1 *termui.Sparklines
+	Sparkline2 *termui.Sparklines
 }
 
 // Init creates widgets, sets sizes and labels.
@@ -69,7 +70,7 @@ func (t *TermUI) Init(data UIData) error {
 		}
 	}
 
-	t.MemSparkline = func() *termui.Sparklines {
+	makeSparkline := func(name VarName) *termui.Sparklines {
 		var sparklines []termui.Sparkline
 		for _, service := range data.Services {
 			spl := termui.NewSparkline()
@@ -82,9 +83,13 @@ func (t *TermUI) Init(data UIData) error {
 		s := termui.NewSparklines(sparklines...)
 		s.Height = 2*len(data.Services) + 2
 		s.HasBorder = true
-		s.Border.Label = fmt.Sprintf("Monitoring %s", data.Vars[0].Long())
+		s.Border.Label = fmt.Sprintf("Monitoring %s", name.Long())
 		return s
-	}()
+	}
+	t.Sparkline1 = makeSparkline(data.Vars[0])
+	if len(data.Vars) > 1 {
+		t.Sparkline2 = makeSparkline(data.Vars[1])
+	}
 
 	cellW, firstW := calculateCellWidth(len(data.Vars) + 1)
 	col := termui.NewCol(firstW, 0, t.Services)
@@ -99,7 +104,9 @@ func (t *TermUI) Init(data UIData) error {
 			termui.NewCol(6, 0, t.Title),
 			termui.NewCol(6, 0, t.Status)),
 		listsRow,
-		termui.NewRow(termui.NewCol(12, 0, t.MemSparkline)),
+		termui.NewRow(
+			termui.NewCol(6, 0, t.Sparkline1),
+			termui.NewCol(6, 0, t.Sparkline2)),
 	)
 
 	termui.Body.Align()
@@ -129,10 +136,16 @@ func (t *TermUI) Update(data UIData) {
 	}
 
 	// Sparklines
-	topVar := data.Vars[0]
 	for i, service := range data.Services {
-		t.MemSparkline.Lines[i].Title = fmt.Sprintf("%s (max: %v)", service.Name, service.Max(topVar))
-		t.MemSparkline.Lines[i].Data = service.Values(topVar)
+		max := formatMax(service.Max(data.Vars[0]))
+		t.Sparkline1.Lines[i].Title = fmt.Sprintf("%s%s", service.Name, max)
+		t.Sparkline1.Lines[i].Data = service.Values(data.Vars[0])
+
+		if len(data.Vars) > 1 {
+			max = formatMax(service.Max(data.Vars[1]))
+			t.Sparkline2.Lines[i].Title = fmt.Sprintf("%s%s", service.Name, max)
+			t.Sparkline2.Lines[i].Data = service.Values(data.Vars[1])
+		}
 	}
 
 	termui.Body.Width = termui.TermWidth()
