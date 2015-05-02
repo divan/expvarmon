@@ -41,6 +41,16 @@ func (v VarName) Short() string {
 	return slice[len(slice)-1]
 }
 
+// Long returns long name, without kind: modifier.
+func (v VarName) Long() string {
+	if v == "" {
+		return ""
+	}
+
+	start := strings.IndexRune(string(v), ':') + 1
+	return string(v)[start:]
+}
+
 func (v VarName) Kind() varKind {
 	start := strings.IndexRune(string(v), ':')
 	if start == -1 {

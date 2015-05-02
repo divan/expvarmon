@@ -82,7 +82,7 @@ func (t *TermUI) Init(data UIData) error {
 		s := termui.NewSparklines(sparklines...)
 		s.Height = 2*len(data.Services) + 2
 		s.HasBorder = true
-		s.Border.Label = fmt.Sprintf("Monitoring %s", data.Vars[0])
+		s.Border.Label = fmt.Sprintf("Monitoring %s", data.Vars[0].Long())
 		return s
 	}()
 
@@ -115,7 +115,7 @@ func (t *TermUI) Update(data UIData) {
 	// List with service names
 	var services []string
 	for _, service := range data.Services {
-		services = append(services, service.StatusLine())
+		services = append(services, StatusLine(service))
 	}
 	t.Services.Items = services
 
@@ -143,6 +143,15 @@ func (t *TermUI) Update(data UIData) {
 // Close shuts down UI module.
 func (t *TermUI) Close() {
 	termui.Close()
+}
+
+// StatusLine returns status line for service with it's name and status.
+func StatusLine(s *Service) string {
+	if s.Err != nil {
+		return fmt.Sprintf("[ERR] %s failed", s.Name)
+	}
+
+	return fmt.Sprintf("[R] %s", s.Name)
 }
 
 // GridSz defines grid size used in TermUI

@@ -18,7 +18,7 @@ type Service struct {
 	Name    string
 	Cmdline string
 
-	values map[VarName]*Stack
+	stacks map[VarName]*Stack
 
 	Err error
 }
@@ -29,11 +29,12 @@ func NewService(port string, vars []VarName) *Service {
 	for _, name := range vars {
 		values[VarName(name)] = NewStack()
 	}
+
 	return &Service{
 		Name: port, // we have only port on start, so use it as name until resolved
 		Port: port,
 
-		values: values,
+		stacks: values,
 	}
 }
 
@@ -55,7 +56,7 @@ func (s *Service) Update(wg *sync.WaitGroup) {
 	}
 
 	// For all vars, fetch desired value from Json and push to it's own stack.
-	for name, stack := range s.values {
+	for name, stack := range s.stacks {
 		value, err := expvar.GetValue(name.ToSlice()...)
 		if err != nil {
 			continue
@@ -67,6 +68,7 @@ func (s *Service) Update(wg *sync.WaitGroup) {
 	}
 }
 
+// guessValue attemtps to bruteforce all supported types.
 func guessValue(value *jason.Value) interface{} {
 	if v, err := value.Int64(); err == nil {
 		return v
@@ -99,15 +101,6 @@ func (s Service) Addr() string {
 	return ""
 }
 
-// StatusLine returns status line for services with it's name and status.
-func (s Service) StatusLine() string {
-	if s.Err != nil {
-		return fmt.Sprintf("[ERR] %s failed", s.Name)
-	}
-
-	return fmt.Sprintf("[R] %s", s.Name)
-}
-
 // Value returns current value for the given var of this service.
 //
 // It also formats value, if kind is specified.
@@ -115,7 +108,7 @@ func (s Service) Value(name VarName) string {
 	if s.Err != nil {
 		return "N/A"
 	}
-	val, ok := s.values[name]
+	val, ok := s.stacks[name]
 	if !ok {
 		return "N/A"
 	}
@@ -127,12 +120,20 @@ func (s Service) Value(name VarName) string {
 
 	switch name.Kind() {
 	case KindMemory:
+		if _, ok := v.(int64); !ok {
+			break
+		}
 		return fmt.Sprintf("%s", byten.Size(v.(int64)))
 	case KindDuration:
-		return fmt.Sprintf("%v", time.Duration(v.(int64)))
+		if _, ok := v.(int64); !ok {
+			break
+		}
+		return fmt.Sprintf("%s", time.Duration(v.(int64)))
 	default:
 		return fmt.Sprintf("%v", v)
 	}
+
+	return fmt.Sprintf("%v", v)
 }
 
 // Values returns slice of ints with recent
@@ -141,7 +142,7 @@ func (s Service) Values(name VarName) []int {
 	if s.Err != nil {
 		return nil
 	}
-	stack, ok := s.values[name]
+	stack, ok := s.stacks[name]
 	if !ok {
 		return nil
 	}
