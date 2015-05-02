@@ -8,8 +8,9 @@ const DefaultSize = 1200
 
 // Stack is a limited FIFO for holding sparkline values.
 type Stack struct {
-	Values []interface{}
+	Values []VarValue
 	Len    int
+	Max    VarValue
 }
 
 // NewStack inits new Stack with default size limit.
@@ -20,21 +21,32 @@ func NewStack() *Stack {
 // NewStackWithSize inits new Stack with size limit.
 func NewStackWithSize(size int) *Stack {
 	return &Stack{
-		Values: make([]interface{}, size),
+		Values: make([]VarValue, size),
 		Len:    size,
 	}
 }
 
 // Push inserts data to stack, preserving constant length.
-func (s *Stack) Push(val interface{}) {
+func (s *Stack) Push(val VarValue) {
 	s.Values = append(s.Values, val)
 	if len(s.Values) > s.Len {
 		s.Values = s.Values[1:]
 	}
+
+	switch val.(type) {
+	case int64:
+		if s.Max == nil || val.(int64) > s.Max.(int64) {
+			s.Max = val
+		}
+	case float64:
+		if s.Max == nil || val.(float64) > s.Max.(float64) {
+			s.Max = val
+		}
+	}
 }
 
 // Front returns front value.
-func (s *Stack) Front() interface{} {
+func (s *Stack) Front() VarValue {
 	if len(s.Values) == 0 {
 		return nil
 	}

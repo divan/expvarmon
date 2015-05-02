@@ -42,25 +42,19 @@ func (t *TermUISingle) Init(data UIData) error {
 		return p
 	}()
 
+	var sparklines []termui.Sparkline
 	for _, name := range data.Vars {
-		_, ok := t.Sparklines[name]
-		if !ok {
-			spl := termui.NewSparkline()
-			spl.Height = 1
-			spl.TitleColor = colorByKind(name.Kind())
-			spl.LineColor = colorByKind(name.Kind())
-			spl.Title = name.Long()
-			t.Sparklines[name] = &spl
-		}
+		spl := termui.NewSparkline()
+		spl.Height = 1
+		spl.TitleColor = colorByKind(name.Kind())
+		spl.LineColor = colorByKind(name.Kind())
+		spl.Title = name.Long()
+		sparklines = append(sparklines, spl)
 	}
 
 	t.Sparkline = func() *termui.Sparklines {
-		var spls []termui.Sparkline
-		for _, sp := range t.Sparklines {
-			spls = append(spls, *sp)
-		}
-		s := termui.NewSparklines(spls...)
-		s.Height = 2*len(spls) + 2
+		s := termui.NewSparklines(sparklines...)
+		s.Height = 2*len(sparklines) + 2
 		s.HasBorder = true
 		s.Border.Label = fmt.Sprintf("Monitoring")
 		return s
@@ -92,7 +86,13 @@ func (t *TermUISingle) Update(data UIData) {
 			continue
 		}
 		spl := &t.Sparkline.Lines[i]
-		spl.Title = fmt.Sprintf("%s: %v", name.Long(), service.Value(name))
+
+		var maxStr string
+		max := service.Max(name)
+		if max != nil {
+			maxStr = fmt.Sprintf(" (max: %v)", max)
+		}
+		spl.Title = fmt.Sprintf("%s: %v%s", name.Long(), service.Value(name), maxStr)
 		spl.TitleColor = colorByKind(name.Kind())
 		spl.LineColor = colorByKind(name.Kind())
 		spl.Data = service.Values(name)

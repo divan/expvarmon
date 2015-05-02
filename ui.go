@@ -131,7 +131,7 @@ func (t *TermUI) Update(data UIData) {
 	// Sparklines
 	topVar := data.Vars[0]
 	for i, service := range data.Services {
-		t.MemSparkline.Lines[i].Title = service.Name
+		t.MemSparkline.Lines[i].Title = fmt.Sprintf("%s (max: %v)", service.Name, service.Max(topVar))
 		t.MemSparkline.Lines[i].Data = service.Values(topVar)
 	}
 

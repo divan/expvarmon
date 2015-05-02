@@ -6,10 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/antonholmquist/jason"
-	"github.com/pyk/byten"
 )
 
 // Service represents constantly updating info about single service.
@@ -118,22 +116,7 @@ func (s Service) Value(name VarName) string {
 		return "N/A"
 	}
 
-	switch name.Kind() {
-	case KindMemory:
-		if _, ok := v.(int64); !ok {
-			break
-		}
-		return fmt.Sprintf("%s", byten.Size(v.(int64)))
-	case KindDuration:
-		if _, ok := v.(int64); !ok {
-			break
-		}
-		return fmt.Sprintf("%s", time.Duration(v.(int64)))
-	default:
-		return fmt.Sprintf("%v", v)
-	}
-
-	return fmt.Sprintf("%v", v)
+	return Format(v, name.Kind())
 }
 
 // Values returns slice of ints with recent
@@ -148,4 +131,18 @@ func (s Service) Values(name VarName) []int {
 	}
 
 	return stack.IntValues()
+}
+
+func (s Service) Max(name VarName) interface{} {
+	val, ok := s.stacks[name]
+	if !ok {
+		return nil
+	}
+
+	v := val.Max
+	if v == nil {
+		return nil
+	}
+
+	return Format(v, name.Kind())
 }

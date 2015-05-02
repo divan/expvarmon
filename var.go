@@ -1,6 +1,12 @@
 package main
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/pyk/byten"
+)
 
 // VarName represents variable name.
 //
@@ -10,7 +16,11 @@ import "strings"
 // It also can have optional "kind:" modifier, like "mem:" or "duration:"
 type VarName string
 
+// VarKind specifies special kinds of values, affects formatting.
 type VarKind int
+
+// VarValue represents arbitrary value for variable.
+type VarValue interface{}
 
 const (
 	KindDefault VarKind = iota
@@ -52,6 +62,7 @@ func (v VarName) Long() string {
 	return string(v)[start:]
 }
 
+// Kind returns kind of variable, based on it's name modifiers ("mem:")
 func (v VarName) Kind() VarKind {
 	start := strings.IndexRune(string(v), ':')
 	if start == -1 {
@@ -67,4 +78,22 @@ func (v VarName) Kind() VarKind {
 		return KindString
 	}
 	return KindDefault
+}
+
+// Format returns human-readable var value representation.
+func Format(v VarValue, kind VarKind) string {
+	switch kind {
+	case KindMemory:
+		if _, ok := v.(int64); !ok {
+			break
+		}
+		return fmt.Sprintf("%s", byten.Size(v.(int64)))
+	case KindDuration:
+		if _, ok := v.(int64); !ok {
+			break
+		}
+		return fmt.Sprintf("%s", time.Duration(v.(int64)))
+	}
+
+	return fmt.Sprintf("%v", v)
 }
