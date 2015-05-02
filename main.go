@@ -11,8 +11,8 @@ import (
 
 var (
 	interval = flag.Duration("i", 5*time.Second, "Polling interval")
-	portsArg = flag.String("ports", "1234", "Ports for accessing services expvars")
-	varsArg  = flag.String("vars", "mem:memstats.Alloc,mem:memstats.Sys", "Default vars to monitor")
+	portsArg = flag.String("ports", "1234", "Ports for accessing services expvars (comma-separated)")
+	varsArg  = flag.String("vars", "mem:memstats.Alloc,mem:memstats.Sys", "Vars to monitor (comma-separated)")
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
 )
 

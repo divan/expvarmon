@@ -77,7 +77,7 @@ func (t *TermUISingle) Update(data UIData) {
 	// single mode assumes we have one service only to monitor
 	service := data.Services[0]
 
-	t.Title.Text = fmt.Sprintf("monitoring %s, press q to quit", service.Name)
+	t.Title.Text = fmt.Sprintf("monitoring %s every %v, press q to quit", service.Name, *interval)
 	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format("15:04:05 02/Jan/06"))
 
 	// Sparklines
