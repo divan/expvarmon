@@ -92,7 +92,7 @@ func Format(v VarValue, kind VarKind) string {
 		if _, ok := v.(int64); !ok {
 			break
 		}
-		return fmt.Sprintf("%s", time.Duration(v.(int64)))
+		return fmt.Sprintf("%s", roundDuration(time.Duration(v.(int64))))
 	}
 
 	if f, ok := v.(float64); ok {
@@ -100,4 +100,30 @@ func Format(v VarValue, kind VarKind) string {
 	}
 
 	return fmt.Sprintf("%v", v)
+}
+
+func roundDuration(d time.Duration) time.Duration {
+	r := time.Second
+	if d < time.Second {
+		r = time.Millisecond
+	}
+	if d < time.Millisecond {
+		r = time.Microsecond
+	}
+	if r <= 0 {
+		return d
+	}
+	neg := d < 0
+	if neg {
+		d = -d
+	}
+	if m := d % r; m+m < r {
+		d = d - m
+	} else {
+		d = d + r - m
+	}
+	if neg {
+		return -d
+	}
+	return d
 }
