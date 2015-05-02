@@ -16,6 +16,7 @@ const (
 	KindDefault VarKind = iota
 	KindMemory
 	KindDuration
+	KindString
 )
 
 // ToSlice converts "dot-separated" notation into the "slice of strings".
@@ -62,6 +63,8 @@ func (v VarName) Kind() VarKind {
 		return KindMemory
 	case "duration":
 		return KindDuration
+	case "str":
+		return KindString
 	}
 	return KindDefault
 }

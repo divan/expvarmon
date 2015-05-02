@@ -88,6 +88,9 @@ func (t *TermUISingle) Update(data UIData) {
 
 	// Sparklines
 	for i, name := range data.Vars {
+		if name.Kind() == KindString {
+			continue
+		}
 		spl := &t.Sparkline.Lines[i]
 		spl.Title = fmt.Sprintf("%s: %v", name.Long(), service.Value(name))
 		spl.TitleColor = colorByKind(name.Kind())
