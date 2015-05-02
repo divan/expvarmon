@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 )
 
@@ -18,4 +19,14 @@ func ParseVars(vars string) ([]VarName, error) {
 		ret = append(ret, VarName(s))
 	}
 	return ret, nil
+}
+
+// BaseCommand returns cleaned command name from Cmdline array.
+//
+// I.e. "./some.service/binary.name -arg 1 -arg" will be "binary.name".
+func BaseCommand(cmdline []string) string {
+	if len(cmdline) == 0 {
+		return ""
+	}
+	return filepath.Base(cmdline[0])
 }
