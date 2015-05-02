@@ -10,10 +10,10 @@ import "strings"
 // It also can have optional "kind:" modifier, like "mem:" or "duration:"
 type VarName string
 
-type varKind int
+type VarKind int
 
 const (
-	KindDefault varKind = iota
+	KindDefault VarKind = iota
 	KindMemory
 	KindDuration
 )
@@ -51,7 +51,7 @@ func (v VarName) Long() string {
 	return string(v)[start:]
 }
 
-func (v VarName) Kind() varKind {
+func (v VarName) Kind() VarKind {
 	start := strings.IndexRune(string(v), ':')
 	if start == -1 {
 		return KindDefault
