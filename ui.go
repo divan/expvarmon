@@ -99,14 +99,20 @@ func (t *TermUI) Init(data UIData) error {
 	}
 	listsRow := termui.NewRow(cols...)
 
+	// make on sparkline if only one var specified, two otherwise
+	sparkRow := termui.NewRow(termui.NewCol(12, 0, t.Sparkline1))
+	if len(data.Vars) > 1 {
+		sparkRow = termui.NewRow(
+			termui.NewCol(6, 0, t.Sparkline1),
+			termui.NewCol(6, 0, t.Sparkline2))
+	}
+
 	termui.Body.AddRows(
 		termui.NewRow(
 			termui.NewCol(6, 0, t.Title),
 			termui.NewCol(6, 0, t.Status)),
 		listsRow,
-		termui.NewRow(
-			termui.NewCol(6, 0, t.Sparkline1),
-			termui.NewCol(6, 0, t.Sparkline2)),
+		sparkRow,
 	)
 
 	termui.Body.Align()
