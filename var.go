@@ -6,7 +6,17 @@ import "strings"
 //
 // It has dot-separated format, like "memstats.Alloc",
 // but can be used in different forms, hence it's own type.
+//
+// It also can have optional "kind:" modifier, like "mem:" or "duration:"
 type VarName string
+
+type varKind int
+
+const (
+	KindDefault varKind = iota
+	KindMemory
+	KindDuration
+)
 
 // ToSlice converts "dot-separated" notation into the "slice of strings".
 //
@@ -14,8 +24,11 @@ type VarName string
 // "slice of strings" is used by Jason library.
 //
 // Example: "memstats.Alloc" => []string{"memstats", "Alloc"}
+// Example: "mem:memstats.Alloc" => []string{"memstats", "Alloc"}
 func (v VarName) ToSlice() []string {
-	return strings.FieldsFunc(string(v), func(r rune) bool { return r == '.' })
+	start := strings.IndexRune(string(v), ':') + 1
+	slice := strings.FieldsFunc(string(v)[start:], func(r rune) bool { return r == '.' })
+	return slice
 }
 
 // Short returns short name, which is typically is the last word in the long names.
@@ -26,4 +39,19 @@ func (v VarName) Short() string {
 
 	slice := v.ToSlice()
 	return slice[len(slice)-1]
+}
+
+func (v VarName) Kind() varKind {
+	start := strings.IndexRune(string(v), ':')
+	if start == -1 {
+		return KindDefault
+	}
+
+	switch string(v)[:start] {
+	case "mem":
+		return KindMemory
+	case "duration":
+		return KindDuration
+	}
+	return KindDefault
 }

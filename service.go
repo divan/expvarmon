@@ -6,8 +6,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/antonholmquist/jason"
+	"github.com/pyk/byten"
 )
 
 // Service represents constantly updating info about single service.
@@ -107,6 +109,8 @@ func (s Service) StatusLine() string {
 }
 
 // Value returns current value for the given var of this service.
+//
+// It also formats value, if kind is specified.
 func (s Service) Value(name VarName) string {
 	if s.Err != nil {
 		return "N/A"
@@ -115,11 +119,20 @@ func (s Service) Value(name VarName) string {
 	if !ok {
 		return "N/A"
 	}
-	if val.Front() == nil {
+
+	v := val.Front()
+	if v == nil {
 		return "N/A"
 	}
 
-	return fmt.Sprintf("%v", val.Front())
+	switch name.Kind() {
+	case KindMemory:
+		return fmt.Sprintf("%s", byten.Size(v.(int64)))
+	case KindDuration:
+		return fmt.Sprintf("%v", time.Duration(v.(int64)))
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
 
 // Values returns slice of ints with recent
