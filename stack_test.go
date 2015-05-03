@@ -32,10 +32,10 @@ func TestStack(t *testing.T) {
 
 	ints1 := s1.IntValues()
 	if len(ints1) != 3 {
-		t.Fatal("expecting len of to be %d, but got %d", 3, len(ints1))
+		t.Fatalf("expecting len of to be %d, but got %d", 3, len(ints1))
 	}
 	if ints1[0] != 1 || ints1[1] != 0 || ints1[2] != 1 {
-		t.Fatal("bool values converted to int incorrectly: %v", ints1)
+		t.Fatalf("bool values converted to int incorrectly: %v", ints1)
 	}
 
 	s2 := NewStackWithSize(3)
@@ -45,9 +45,9 @@ func TestStack(t *testing.T) {
 
 	ints2 := s2.IntValues()
 	if len(ints2) != 3 {
-		t.Fatal("expecting len to be %d, but got %d", 3, len(ints2))
+		t.Fatalf("expecting len to be %d, but got %d", 3, len(ints2))
 	}
 	if ints2[0] != 10 || ints2[1] != 50 || ints2[2] != 3 {
-		t.Fatal("float values converted to int incorrectly: %v", ints2)
+		t.Fatalf("float values converted to int incorrectly: %v", ints2)
 	}
 }

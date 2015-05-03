@@ -136,6 +136,7 @@ func (s Service) Values(name VarName) []int {
 	return stack.IntValues()
 }
 
+// Max returns maximum recorded value for given service and var.
 func (s Service) Max(name VarName) interface{} {
 	val, ok := s.stacks[name]
 	if !ok {

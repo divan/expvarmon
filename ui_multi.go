@@ -125,8 +125,19 @@ func (t *TermUI) Update(data UIData) {
 	}
 
 	t.Relayout()
+
+	var widgets []termui.Bufferer
+	widgets = append(widgets, t.Title, t.Status, t.Services, t.Sparkline1)
+	for _, list := range t.Lists {
+		widgets = append(widgets, list)
+	}
+	if t.Sparkline2 != nil {
+		widgets = append(widgets, t.Sparkline2)
+	}
+	termui.Render(widgets...)
 }
 
+// Relayout recalculates widgets sizes and coords.
 func (t *TermUI) Relayout() {
 	tw, th := termui.TermWidth(), termui.TermHeight()
 	h := th
@@ -135,6 +146,9 @@ func (t *TermUI) Relayout() {
 	firstRowH := 3
 	t.Title.Height = firstRowH
 	t.Title.Width = tw / 2
+	if tw%2 == 1 {
+		t.Title.Width += 1
+	}
 	t.Status.Height = firstRowH
 	t.Status.Width = tw / 2
 	t.Status.X = t.Title.X + t.Title.Width
@@ -177,20 +191,14 @@ func (t *TermUI) Relayout() {
 		t.Sparkline1.Width = tw / 2
 
 		t.Sparkline2.Width = tw / 2
+		if tw%2 == 1 {
+			t.Sparkline2.Width += 1
+		}
 		t.Sparkline2.X = t.Sparkline1.X + t.Sparkline1.Width
 		t.Sparkline2.Height = h
 		t.Sparkline2.Y = th - h
 	}
 
-	var widgets []termui.Bufferer
-	widgets = append(widgets, t.Title, t.Status, t.Services, t.Sparkline1)
-	for _, list := range t.Lists {
-		widgets = append(widgets, list)
-	}
-	if t.Sparkline2 != nil {
-		widgets = append(widgets, t.Sparkline2)
-	}
-	termui.Render(widgets...)
 }
 
 // Close shuts down UI module.

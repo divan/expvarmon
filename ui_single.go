@@ -61,14 +61,7 @@ func (t *TermUISingle) Init(data UIData) error {
 		return s
 	}()
 
-	termui.Body.AddRows(
-		termui.NewRow(
-			termui.NewCol(6, 0, t.Title),
-			termui.NewCol(6, 0, t.Status)),
-		termui.NewRow(termui.NewCol(12, 0, t.Sparkline)),
-	)
-
-	termui.Body.Align()
+	t.Relayout()
 
 	return nil
 }
@@ -96,14 +89,39 @@ func (t *TermUISingle) Update(data UIData) {
 		spl.Data = service.Values(name)
 	}
 
-	termui.Body.Width = termui.TermWidth()
-	termui.Body.Align()
-	termui.Render(termui.Body)
+	t.Relayout()
+
+	var widgets []termui.Bufferer
+	widgets = append(widgets, t.Title, t.Status, t.Sparkline)
+	termui.Render(widgets...)
 }
 
 // Close shuts down UI module.
 func (t *TermUISingle) Close() {
 	termui.Close()
+}
+
+// Relayout recalculates widgets sizes and coords.
+func (t *TermUISingle) Relayout() {
+	tw, th := termui.TermWidth(), termui.TermHeight()
+	h := th
+
+	// First row: Title and Status pars
+	firstRowH := 3
+	t.Title.Height = firstRowH
+	t.Title.Width = tw / 2
+	if tw%2 == 1 {
+		t.Title.Width += 1
+	}
+	t.Status.Height = firstRowH
+	t.Status.Width = tw / 2
+	t.Status.X = t.Title.X + t.Title.Width
+	h -= firstRowH
+
+	// Second row: Sparklines
+	t.Sparkline.Width = tw
+	t.Sparkline.Height = h
+	t.Sparkline.Y = th - h
 }
 
 func formatMax(max interface{}) string {
