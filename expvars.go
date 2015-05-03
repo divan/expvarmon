@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/antonholmquist/jason"
 )
@@ -19,7 +20,10 @@ type Expvar struct {
 // FetchExpvar fetches expvar by http for the given addr (host:port)
 func FetchExpvar(addr string) (*Expvar, error) {
 	e := &Expvar{&jason.Object{}}
-	resp, err := http.Get(addr)
+	client := &http.Client{
+		Timeout: 1 * time.Second, // TODO: make it configurable or left default?
+	}
+	resp, err := client.Get(addr)
 	if err != nil {
 		return e, err
 	}
