@@ -25,3 +25,44 @@ func TestUtils(t *testing.T) {
 		t.Fatalf("vars should contain 4 elements, but has %d", len(vars))
 	}
 }
+
+func TestPorts(t *testing.T) {
+	arg := "1234,1235"
+	ports, err := ParsePorts(arg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ports) != 2 || ports[0] != "1234" {
+		t.Fatalf("ParsePorts returns wrong data: %v", ports)
+	}
+
+	arg = "1234-1237,2000"
+	ports, err = ParsePorts(arg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ports) != 5 || ports[0] != "1234" || ports[4] != "2000" {
+		t.Fatalf("ParsePorts returns wrong data: %v", ports)
+	}
+
+	arg = "localhost:2000-2002,remote:1234-1235"
+	ports, err = ParsePorts(arg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ports) != 5 || ports[0] != "localhost:2000" || ports[4] != "remote:1235" {
+		t.Fatalf("ParsePorts returns wrong data: %v", ports)
+	}
+
+	arg = "localhost:2000-2002,remote:1234-1235,some:weird:1234-123input"
+	_, err = ParsePorts(arg)
+	if err == nil {
+		t.Fatalf("err shouldn't be nil")
+	}
+
+	arg = "string,sdasd"
+	_, err = ParsePorts(arg)
+	if err == nil {
+		t.Fatalf("err shouldn't be nil")
+	}
+}
