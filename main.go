@@ -65,8 +65,7 @@ func main() {
 				return
 			}
 			if e.Type == termui.EventResize {
-				termui.Body.Width = termui.TermWidth()
-				termui.Body.Align()
+				ui.Update(*data)
 			}
 		}
 	}
