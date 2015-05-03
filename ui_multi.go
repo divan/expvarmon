@@ -209,7 +209,7 @@ func (t *TermUI) Close() {
 // StatusLine returns status line for service with it's name and status.
 func StatusLine(s *Service) string {
 	if s.Err != nil {
-		return fmt.Sprintf("[ERR] ⛔ %s failed", s.Name)
+		return fmt.Sprintf("[E] ⛔ %s failed", s.Name)
 	}
 
 	if s.Restarted {
