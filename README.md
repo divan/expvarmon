@@ -70,6 +70,13 @@ Just run expvarmon with -ports="1234" parameter:
     
 That's it.
 
+More examples:
+
+    ./expvarmon -ports="80"
+    ./expvarmon -ports="23000-23010,80" -i=1m
+    ./expvarmon -ports="80,remoteapp:80" -vars="mem:memstats.Alloc,duration:Response.Mean,Counter"
+    ./expvarmon -ports="1234-1236" -vars="Goroutines" -self
+
 ## Advanced usage
 
 If you need to monitor more (or less) vars, you can specify them with -vars command line flag.
@@ -93,6 +100,10 @@ So, yes, you can specify multiple ports, using '-' for ranges, and specify host(
 You can also monitor expvarmon itself, using -self flag.
 
 ### Vars
+
+Expvarmon doesn't restrict you to monitor only memstats. You can publish you own counters and variables using expvar.Publish() method or using expvar wrappers libraries. Just pass you variables names as they appear in JSON to -var command line flag.
+
+Notation is dot-separated, for example: **memstats.Alloc** for .MemStats.Alloc field. Quick link to runtime.MemStats documentation: http://golang.org/pkg/runtime/#MemStats
 
 Expvar allows to export only basic types - structs, ints, floats, bools and strings. Ints are used for sparklines, and displayed as is. But you can spefify modifier to make sure it will be rendered properly.
 
