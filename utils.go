@@ -2,8 +2,11 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
+
+	"github.com/bsiegert/ranges"
 )
 
 // ParseVars returns parsed and validated slice of strings with
@@ -33,10 +36,14 @@ func BaseCommand(cmdline []string) string {
 
 // ParsePorts converts comma-separated ports into strings slice
 func ParsePorts(s string) ([]string, error) {
-	ports := strings.FieldsFunc(s, func(r rune) bool { return r == ',' })
-	if len(ports) == 0 {
-		return nil, errors.New("no ports specified")
+	portsInt, err := ranges.Parse(s)
+	if err != nil {
+		return nil, err
 	}
 
+	var ports []string
+	for _, port := range portsInt {
+		ports = append(ports, fmt.Sprintf("%d", port))
+	}
 	return ports, nil
 }
