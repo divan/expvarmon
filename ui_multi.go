@@ -12,7 +12,7 @@ type TermUI struct {
 	Title      *termui.Par
 	Status     *termui.Par
 	Services   *termui.List
-	Lists      map[VarName]*termui.List
+	Lists      []*termui.List
 	Sparkline1 *termui.Sparklines
 	Sparkline2 *termui.Sparklines
 }
@@ -23,8 +23,6 @@ func (t *TermUI) Init(data UIData) error {
 	if err != nil {
 		return err
 	}
-
-	t.Lists = make(map[VarName]*termui.List)
 
 	termui.UseTheme("helloworld")
 
@@ -47,20 +45,23 @@ func (t *TermUI) Init(data UIData) error {
 	t.Services = func() *termui.List {
 		list := termui.NewList()
 		list.ItemFgColor = termui.ColorGreen
+		list.Border.LabelFgColor = termui.ColorGreen | termui.AttrBold
 		list.Border.Label = "Services"
 		list.Height = len(data.Services) + 2
 		return list
 	}()
 
-	for _, name := range data.Vars {
-		_, ok := t.Lists[name]
-		if !ok {
-			list := termui.NewList()
-			list.ItemFgColor = colorByKind(name.Kind())
-			list.Border.Label = name.Short()
-			list.Height = len(data.Services) + 2
-			t.Lists[name] = list
+	t.Lists = make([]*termui.List, len(data.Vars))
+	for i, name := range data.Vars {
+		list := termui.NewList()
+		list.ItemFgColor = colorByKind(name.Kind())
+		list.Border.Label = name.Short()
+		list.Border.LabelFgColor = termui.ColorGreen
+		if i < 2 {
+			list.Border.LabelFgColor = termui.ColorGreen | termui.AttrBold
 		}
+		list.Height = len(data.Services) + 2
+		t.Lists[i] = list
 	}
 
 	makeSparkline := func(name VarName) *termui.Sparklines {
@@ -84,31 +85,7 @@ func (t *TermUI) Init(data UIData) error {
 		t.Sparkline2 = makeSparkline(data.Vars[1])
 	}
 
-	cellW, firstW := calculateCellWidth(len(data.Vars) + 1)
-	col := termui.NewCol(firstW, 0, t.Services)
-	cols := []*termui.Row{col}
-	for _, name := range data.Vars {
-		cols = append(cols, termui.NewCol(cellW, 0, t.Lists[name]))
-	}
-	listsRow := termui.NewRow(cols...)
-
-	// make on sparkline if only one var specified, two otherwise
-	sparkRow := termui.NewRow(termui.NewCol(12, 0, t.Sparkline1))
-	if len(data.Vars) > 1 {
-		sparkRow = termui.NewRow(
-			termui.NewCol(6, 0, t.Sparkline1),
-			termui.NewCol(6, 0, t.Sparkline2))
-	}
-
-	termui.Body.AddRows(
-		termui.NewRow(
-			termui.NewCol(6, 0, t.Title),
-			termui.NewCol(6, 0, t.Status)),
-		listsRow,
-		sparkRow,
-	)
-
-	termui.Body.Align()
+	t.Relayout()
 
 	return nil
 }
@@ -126,12 +103,12 @@ func (t *TermUI) Update(data UIData) {
 	t.Services.Items = services
 
 	// Lists with values
-	for _, name := range data.Vars {
+	for i, name := range data.Vars {
 		var lines []string
 		for _, service := range data.Services {
 			lines = append(lines, service.Value(name))
 		}
-		t.Lists[name].Items = lines
+		t.Lists[i].Items = lines
 	}
 
 	// Sparklines
@@ -147,9 +124,73 @@ func (t *TermUI) Update(data UIData) {
 		}
 	}
 
-	termui.Body.Width = termui.TermWidth()
-	termui.Body.Align()
-	termui.Render(termui.Body)
+	t.Relayout()
+}
+
+func (t *TermUI) Relayout() {
+	tw, th := termui.TermWidth(), termui.TermHeight()
+	h := th
+
+	// First row: Title and Status pars
+	firstRowH := 3
+	t.Title.Height = firstRowH
+	t.Title.Width = tw / 2
+	t.Status.Height = firstRowH
+	t.Status.Width = tw / 2
+	t.Status.X = t.Title.X + t.Title.Width
+	h -= firstRowH
+
+	// Second Row: lists
+	num := len(t.Lists) + 1
+	listW := tw / num
+
+	// Services list must have visible names
+	minNameWidth := 14
+	t.Services.Width = minNameWidth
+	if listW > minNameWidth {
+		t.Services.Width = listW
+	}
+
+	// Recalculate widths for each list
+	listW = (tw - t.Services.Width) / (num - 1)
+
+	// Finally, enlarge services list, if there is a space left
+	if listW*(num-1)+t.Services.Width < tw {
+		t.Services.Width = tw - (listW * (num - 1))
+	}
+
+	t.Services.Y = th - h
+
+	for i, list := range t.Lists {
+		list.Y = th - h
+		list.Width = listW
+		list.Height = len(t.Lists[0].Items) + 2
+		list.X = t.Services.X + t.Services.Width + i*listW
+	}
+	h -= t.Lists[0].Height
+
+	// Third row: sparklines for two vars
+	t.Sparkline1.Width = tw
+	t.Sparkline1.Height = h
+	t.Sparkline1.Y = th - h
+	if t.Sparkline2 != nil {
+		t.Sparkline1.Width = tw / 2
+
+		t.Sparkline2.Width = tw / 2
+		t.Sparkline2.X = t.Sparkline1.X + t.Sparkline1.Width
+		t.Sparkline2.Height = h
+		t.Sparkline2.Y = th - h
+	}
+
+	var widgets []termui.Bufferer
+	widgets = append(widgets, t.Title, t.Status, t.Services, t.Sparkline1)
+	for _, list := range t.Lists {
+		widgets = append(widgets, list)
+	}
+	if t.Sparkline2 != nil {
+		widgets = append(widgets, t.Sparkline2)
+	}
+	termui.Render(widgets...)
 }
 
 // Close shuts down UI module.
@@ -181,15 +222,4 @@ func colorByKind(kind VarKind) termui.Attribute {
 	default:
 		return termui.ColorBlue | termui.AttrBold
 	}
-}
-
-// GridSz defines grid size used in TermUI
-const GridSz = 12
-
-// calculateCellWidth does some heuristics to calculate optimal cells width
-// for all cells, and adjust first width (with service names) if needed.
-func calculateCellWidth(num int) (cellW int, firstW int) {
-	cellW = GridSz / num
-	firstW = cellW + (GridSz - (num * cellW))
-	return
 }
