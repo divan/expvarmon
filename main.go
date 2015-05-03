@@ -19,6 +19,10 @@ var (
 
 func main() {
 	flag.Parse()
+
+	if *portsArg == "" {
+		log.Fatal("no ports specified. Use -ports arg to specify ports of Go apps to monitor")
+	}
 	ports, err := ParsePorts(*portsArg)
 	if err != nil {
 		log.Fatal("cannot parse ports:", err)
