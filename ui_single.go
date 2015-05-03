@@ -13,6 +13,7 @@ type TermUISingle struct {
 	Status     *termui.Par
 	Sparklines map[VarName]*termui.Sparkline
 	Sparkline  *termui.Sparklines
+	Pars       []*termui.Par
 }
 
 // Init creates widgets, sets sizes and labels.
@@ -42,6 +43,16 @@ func (t *TermUISingle) Init(data UIData) error {
 		p.Border.FgColor = termui.ColorCyan
 		return p
 	}()
+
+	t.Pars = make([]*termui.Par, len(data.Vars))
+	for i, name := range data.Vars {
+		par := termui.NewPar("")
+		par.TextFgColor = colorByKind(name.Kind())
+		par.Border.Label = name.Short()
+		par.Border.LabelFgColor = termui.ColorGreen
+		par.Height = 3
+		t.Pars[i] = par
+	}
 
 	var sparklines []termui.Sparkline
 	for _, name := range data.Vars {
@@ -74,6 +85,11 @@ func (t *TermUISingle) Update(data UIData) {
 	t.Title.Text = fmt.Sprintf("monitoring %s every %v, press q to quit", service.Name, *interval)
 	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format(time.Stamp))
 
+	// Pars
+	for i, name := range data.Vars {
+		t.Pars[i].Text = service.Value(name)
+	}
+
 	// Sparklines
 	for i, name := range data.Vars {
 		spl := &t.Sparkline.Lines[i]
@@ -93,6 +109,9 @@ func (t *TermUISingle) Update(data UIData) {
 
 	var widgets []termui.Bufferer
 	widgets = append(widgets, t.Title, t.Status, t.Sparkline)
+	for _, par := range t.Pars {
+		widgets = append(widgets, par)
+	}
 	termui.Render(widgets...)
 }
 
@@ -118,7 +137,22 @@ func (t *TermUISingle) Relayout() {
 	t.Status.X = t.Title.X + t.Title.Width
 	h -= firstRowH
 
-	// Second row: Sparklines
+	// Second row: lists
+	secondRowH := 3
+	num := len(t.Pars)
+	parW := tw / num
+	for i, par := range t.Pars {
+		par.Y = th - h
+		par.Width = parW
+		par.Height = secondRowH
+		par.X = i * parW
+	}
+	if num*parW < tw {
+		t.Pars[num-1].Width = tw - ((num - 1) * parW)
+	}
+	h -= secondRowH
+
+	// Third row: Sparklines
 	t.Sparkline.Width = tw
 	t.Sparkline.Height = h
 	t.Sparkline.Y = th - h
