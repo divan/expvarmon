@@ -39,7 +39,7 @@ Also it doesn't use any storage engines and doesn't send notifications.
 
 ## Install
 
-Just run go install:
+Just run go get:
 
     go get github.com/divan/expvarmon
 
