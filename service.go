@@ -18,7 +18,8 @@ type Service struct {
 
 	stacks map[VarName]*Stack
 
-	Err error
+	Err       error
+	Restarted bool
 }
 
 // NewService returns new Service object.
@@ -40,6 +41,10 @@ func NewService(port string, vars []VarName) *Service {
 func (s *Service) Update(wg *sync.WaitGroup) {
 	defer wg.Done()
 	expvar, err := FetchExpvar(s.Addr())
+	// check for restart
+	if s.Err != nil && err == nil {
+		s.Restarted = true
+	}
 	s.Err = err
 
 	// Update Cmdline & Name only once
@@ -57,6 +62,7 @@ func (s *Service) Update(wg *sync.WaitGroup) {
 	for name, stack := range s.stacks {
 		value, err := expvar.GetValue(name.ToSlice()...)
 		if err != nil {
+			stack.Push(nil)
 			continue
 		}
 		v := guessValue(value)

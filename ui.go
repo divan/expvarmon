@@ -123,7 +123,7 @@ func (t *TermUI) Init(data UIData) error {
 // Update updates UI widgets from UIData.
 func (t *TermUI) Update(data UIData) {
 	t.Title.Text = fmt.Sprintf("monitoring %d services every %v, press q to quit", len(data.Services), *interval)
-	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format("15:04:05 02/Jan/06"))
+	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format(time.Stamp))
 
 	// List with service names
 	var services []string
@@ -167,7 +167,11 @@ func (t *TermUI) Close() {
 // StatusLine returns status line for service with it's name and status.
 func StatusLine(s *Service) string {
 	if s.Err != nil {
-		return fmt.Sprintf("[ERR] %s failed", s.Name)
+		return fmt.Sprintf("[ERR] ⛔ %s failed", s.Name)
+	}
+
+	if s.Restarted {
+		return fmt.Sprintf("[R] 🔥 %s", s.Name)
 	}
 
 	return fmt.Sprintf("[R] %s", s.Name)
