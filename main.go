@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -11,41 +13,44 @@ import (
 
 var (
 	interval = flag.Duration("i", 5*time.Second, "Polling interval")
-	portsArg = flag.String("ports", "", "Ports for accessing services expvars (comma-separated)")
+	portsArg = flag.String("ports", "", "Ports for accessing services expvars (start-end,port2,port3)")
 	varsArg  = flag.String("vars", "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.EnableGC,memstats.NumGC,duration:memstats.PauseTotalNs", "Vars to monitor (comma-separated)")
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
-	self     = flag.Bool("self", false, "Monitor itself?")
+	self     = flag.Bool("self", false, "Monitor itself")
 )
 
 func main() {
+	flag.Usage = Usage
 	flag.Parse()
 
-	if *portsArg == "" {
-		log.Fatal("no ports specified. Use -ports arg to specify ports of Go apps to monitor")
-	}
-	ports, err := ParsePorts(*portsArg)
-	if err != nil {
-		log.Fatal("cannot parse ports:", err)
-	}
-
-	vars, err := ParseVars(*varsArg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	// Process ports
+	ports, _ := ParsePorts(*portsArg)
 	if *self {
 		port, err := StartSelfMonitor()
 		if err == nil {
 			ports = append(ports, port)
 		}
 	}
+	if len(ports) == 0 {
+		fmt.Println("no ports specified. Use -ports arg to specify ports of Go apps to monitor")
+		Usage()
+		os.Exit(1)
+	}
 
+	// Process vars
+	vars, err := ParseVars(*varsArg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Init UIData
 	data := NewUIData(vars)
 	for _, port := range ports {
 		service := NewService(port, vars)
 		data.Services = append(data.Services, service)
 	}
 
+	// Start proper UI
 	var ui UI
 	if len(data.Services) > 1 {
 		ui = &TermUI{}
@@ -92,4 +97,20 @@ func UpdateAll(ui UI, data *UIData) {
 	data.LastTimestamp = time.Now()
 
 	ui.Update(*data)
+}
+
+// Usage reimplements flag.Usage
+func Usage() {
+	progname := os.Args[0]
+	fmt.Fprintf(os.Stderr, "Usage of %s:\n", progname)
+	flag.PrintDefaults()
+	fmt.Fprintf(os.Stderr, `
+Examples:
+	%s -ports="80"
+	%s -ports="23000-23010,80" -i=1m
+	%s -ports="80,remoteapp:80" -vars="mem:memstats.Alloc,duration:Response.Mean,Counter"
+	%s -ports="1234-1236" -vars="Goroutines" -self
+
+For more details and docs, see README: http://github.com/divan/expvarmon
+`, progname, progname, progname, progname)
 }
