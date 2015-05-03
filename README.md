@@ -6,17 +6,34 @@ TermUI based Go apps monitor using [expvars](http://golang.org/pkg/expvar/) vari
 
 Go apps console monitoring tool. Minimal configuration efforts. Quick and fast monitoring solution for one or multiple services.
 
+## Features
+
+* Single- and multi-apps mode
+* Local and remote apps support
+* Arbitrary number of apps and vars to monitor (from 1 to 30+, depends on size of your terminal)
+* Track restarted/failed apps
+* Show maximum value
+* Supports: Integer, float, duration, memory, string, bool variables
+* Sparkline charts for integer, duration and memory data
+* Auto-resize on font-size change or window resize
+* Uses amazing [TermUI](https://github.com/gizak/termui) library by [gizak](https://github.com/gizak)
+
 ## Demo
 
 ### Multiple apps mode
 <img src="./demo/demo_multi.png" alt="Multi mode" width="800">
 
-### Single mode
+### Single app mode
 <img src="./demo/demo_single.png" alt="Single mode" width="800">
 
 You can monitor arbitrary number of services and variables:
 
 <a href="./demo/demo_1var.png" target="_blank"><img src="./demo/demo_1var.png" alt="1 var" width="350"></a> <a href="./demo/demo_small.png" target="_blank"><img src="./demo/demo_small.png" alt="25 apps" width="350"></a>
+
+## Purpose
+
+This app targets debug/develop sessions when you need an instant way to monitor you app(s). It's not intended to monitor apps in production (though it may be convenient).
+Also it doesn't use any storage engines and doesn't send notifications.
 
 ## Install
 
@@ -55,7 +72,7 @@ That's it.
 
 If you need to monitor more (or less) vars, you can specify them with -vars command line flag.
 
-    expvarmon -help
+    $ expvarmon -help
     Usage of ./expvarmon:
     -dummy=false: Use dummy (console) output
     -i=5s: Polling interval
@@ -72,3 +89,15 @@ If you need to monitor more (or less) vars, you can specify them with -vars comm
 So, yes, you can specify multiple ports, using '-' for ranges, and specify host(s) for remote apps.
 
 You can also monitor expvarmon itself, using -self flag.
+
+### Vars
+
+Expvar allows to export only basic types - structs, ints, floats, bools and strings. Ints are used for sparklines, and displayed as is. But you can spefify modifier to make sure it will be rendered properly.
+
+Vars are specified as a comma-separated list of var identifiers with (optional) modifiers.
+
+| Modifier | Description |
+| --------- | ----------- |
+| mem:      | renders int64 as memory string (KB, MB, etc) |
+| duration: | renders int64 as time.Duration (1s, 2ms, 12h23h) |
+| str:      | doesn't display sparklines chart for this value, just display as string |
