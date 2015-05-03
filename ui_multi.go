@@ -159,7 +159,7 @@ func (t *TermUI) Relayout() {
 	listW := tw / num
 
 	// Services list must have visible names
-	minNameWidth := 14
+	minNameWidth := 20
 	t.Services.Width = minNameWidth
 	if listW > minNameWidth {
 		t.Services.Width = listW
