@@ -15,4 +15,4 @@ Go apps console monitoring tool. Minimal configuration efforts. Quick and fast m
 <img src="./demo/demo_single.png" alt="Single mode" width="800">
 
 You can monitor arbitrary number of services and variables:
-<a href="./demo/demo_multi_2.png" target="_blank"><img src="./demo/demo_multi_2.png" alt="2 vars" width="350"></a> <a href="./demo/demo_small.png" target="_blank"><img src="./demo/demo_small.png" alt="25 apps" width="350"></a>
+<a href="./demo/demo_1var.png" target="_blank"><img src="./demo/demo_1var.png" alt="1 var" width="350"></a> <a href="./demo/demo_small.png" target="_blank"><img src="./demo/demo_small.png" alt="25 apps" width="350"></a>
