@@ -130,7 +130,7 @@ func (t *TermUISingle) Relayout() {
 	t.Title.Height = firstRowH
 	t.Title.Width = tw / 2
 	if tw%2 == 1 {
-		t.Title.Width += 1
+		t.Title.Width++
 	}
 	t.Status.Height = firstRowH
 	t.Status.Width = tw / 2

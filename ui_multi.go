@@ -147,7 +147,7 @@ func (t *TermUI) Relayout() {
 	t.Title.Height = firstRowH
 	t.Title.Width = tw / 2
 	if tw%2 == 1 {
-		t.Title.Width += 1
+		t.Title.Width++
 	}
 	t.Status.Height = firstRowH
 	t.Status.Width = tw / 2
@@ -192,7 +192,7 @@ func (t *TermUI) Relayout() {
 
 		t.Sparkline2.Width = tw / 2
 		if tw%2 == 1 {
-			t.Sparkline2.Width += 1
+			t.Sparkline2.Width++
 		}
 		t.Sparkline2.X = t.Sparkline1.X + t.Sparkline1.Width
 		t.Sparkline2.Height = h
