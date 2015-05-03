@@ -102,6 +102,7 @@ func Format(v VarValue, kind VarKind) string {
 	return fmt.Sprintf("%v", v)
 }
 
+// roundDuration removes unneeded precision from the String() output for time.Duration.
 func roundDuration(d time.Duration) time.Duration {
 	r := time.Second
 	if d < time.Second {
