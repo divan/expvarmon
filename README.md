@@ -1,5 +1,7 @@
 # ExpvarMon
 
+[![Build Status](https://drone.io/github.com/divan/expvarmon/status.png)](https://drone.io/github.com/divan/expvarmon/latest)
+
 TermUI based Go apps monitor using [expvars](http://golang.org/pkg/expvar/) variables (/debug/vars). Quickest way to monitor your Go app.
 
 ## Introduction
