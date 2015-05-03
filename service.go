@@ -128,9 +128,6 @@ func (s Service) Value(name VarName) string {
 // Values returns slice of ints with recent
 // values of the given var, to be used with sparkline.
 func (s Service) Values(name VarName) []int {
-	if s.Err != nil {
-		return nil
-	}
 	stack, ok := s.stacks[name]
 	if !ok {
 		return nil
