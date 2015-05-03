@@ -6,7 +6,7 @@ TermUI based Go apps monitor using [expvars](http://golang.org/pkg/expvar/) vari
 
 ## Introduction
 
-Go apps console monitoring tool. Minimal configuration efforts. Quick and fast monitoring solution for one or multiple services.
+Go apps console monitoring tool. Minimal configuration efforts. Quick and easy monitoring solution for one or multiple services.
 
 ## Features
 
@@ -34,7 +34,7 @@ You can monitor arbitrary number of services and variables:
 
 ## Purpose
 
-This app targets debug/develop sessions when you need an instant way to monitor you app(s). It's not intended to monitor apps in production (though it may be convenient).
+This app targets debug/develop sessions when you need an instant way to monitor you app(s). It's not intended to monitor apps in production.
 Also it doesn't use any storage engines and doesn't send notifications.
 
 ## Install
@@ -59,12 +59,11 @@ and note the port your app is listening on. It it's not, just add two lines:
 
 and expvar will add handler for "localhost:1234/debug/vars" to your app.
 
-By default, expvars adds to variables: *memstats* and *cmdline*. It's enough to monitor memory and garbage collector status in your app.
+By default, expvars adds two variables: *memstats* and *cmdline*. It's enough to monitor memory and garbage collector status in your app.
 
 ### Run expvarmon
 
-
-Just run expvarmon with -ports="1234" parameter:
+Just run expvarmon with -ports="1234" flag:
 
     expvarmon -ports="1234"
     
@@ -101,11 +100,11 @@ You can also monitor expvarmon itself, using -self flag.
 
 ### Vars
 
-Expvarmon doesn't restrict you to monitor only memstats. You can publish you own counters and variables using expvar.Publish() method or using expvar wrappers libraries. Just pass you variables names as they appear in JSON to -var command line flag.
+Expvarmon doesn't restrict you to monitor only memstats. You can publish your own counters and variables using [expvar.Publish()](http://golang.org/pkg/expvar/#Publish) method or using expvar wrappers libraries. Just pass your variables names as they appear in JSON to -var command line flag.
 
 Notation is dot-separated, for example: **memstats.Alloc** for .MemStats.Alloc field. Quick link to runtime.MemStats documentation: http://golang.org/pkg/runtime/#MemStats
 
-Expvar allows to export only basic types - structs, ints, floats, bools and strings. Ints are used for sparklines, and displayed as is. But you can spefify modifier to make sure it will be rendered properly.
+Expvar allows to export only basic types - structs, ints, floats, bools and strings. Ints are used for sparklines, and displayed as is. But you can specify modifier to make sure it will be rendered properly.
 
 Vars are specified as a comma-separated list of var identifiers with (optional) modifiers.
 
