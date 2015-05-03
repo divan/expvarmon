@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/divan/termui"
+	"github.com/gizak/termui"
 )
 
 // TermUISingle is a termUI implementation of UI interface.

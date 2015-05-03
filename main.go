@@ -6,15 +6,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/divan/termui"
+	"github.com/gizak/termui"
 )
 
 var (
 	interval = flag.Duration("i", 5*time.Second, "Polling interval")
-	portsArg = flag.String("ports", "1234", "Ports for accessing services expvars (comma-separated)")
+	portsArg = flag.String("ports", "", "Ports for accessing services expvars (comma-separated)")
 	varsArg  = flag.String("vars", "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.EnableGC,memstats.NumGC,duration:memstats.PauseTotalNs", "Vars to monitor (comma-separated)")
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
-	bind     = flag.String("expvar", "1234", "Port to listen to be able monitor itself")
+	self     = flag.Bool("self", false, "Monitor itself?")
 )
 
 func main() {
@@ -29,7 +29,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go StartHttp(*bind)
+	if *self {
+		port, err := StartSelfMonitor()
+		if err == nil {
+			ports = append(ports, port)
+		}
+	}
 
 	data := NewUIData(vars)
 	for _, port := range ports {
