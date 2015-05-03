@@ -42,7 +42,6 @@ Also it doesn't use any storage engines and doesn't send notifications.
 Just run go install:
 
     go get github.com/divan/expvarmon
-    go install github.com/divan/expvarmon
 
 ## Usage
 
