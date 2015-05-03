@@ -57,7 +57,7 @@ and note the port your app is listening on. It it's not, just add two lines:
 
 and expvar will add handler for "localhost:1234/debug/vars" to your app.
 
-By default, expvars adds to variables: *memstats* and *cmdline*. It's enough to monitor memory memory and garbage collector status in your app.
+By default, expvars adds to variables: *memstats* and *cmdline*. It's enough to monitor memory and garbage collector status in your app.
 
 ### Run expvarmon
 
@@ -101,3 +101,10 @@ Vars are specified as a comma-separated list of var identifiers with (optional) 
 | mem:      | renders int64 as memory string (KB, MB, etc) |
 | duration: | renders int64 as time.Duration (1s, 2ms, 12h23h) |
 | str:      | doesn't display sparklines chart for this value, just display as string |
+
+## TODO
+
+* ports autodiscovery for given hostname
+* more tests coverage
+* better usage of color highligting (for max values or failed apps), after relevant patches will be merged to TermUI
+
