@@ -51,7 +51,7 @@ First, you have to add [expvars](http://golang.org/pkg/expvar/) support into you
 
     import _ "expvar"
 
-and note the port your app is listening on. It it's not, just add two lines:
+and note the port your app is listening on. If it's not, just add two lines:
 
     import "net/http"
     ...
@@ -116,7 +116,6 @@ Vars are specified as a comma-separated list of var identifiers with (optional) 
 
 ## TODO
 
-* ports autodiscovery for given hostname
+* ports auto-discovery for given hostname
 * more tests coverage
-* better usage of color highligting (for max values or failed apps), after relevant patches will be merged to TermUI
-
+* better usage of color highlighting (for max values or failed apps), after relevant patches will be merged to TermUI
