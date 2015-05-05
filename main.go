@@ -32,7 +32,12 @@ func main() {
 		}
 	}
 	if len(ports) == 0 {
-		fmt.Println("no ports specified. Use -ports arg to specify ports of Go apps to monitor")
+		fmt.Fprintln(os.Stderr, "no ports specified. Use -ports arg to specify ports of Go apps to monitor")
+		Usage()
+		os.Exit(1)
+	}
+	if *interval <= 0 {
+		fmt.Fprintln(os.Stderr, "update interval is not valid. Valid examples: 5s, 1m, 1h30m")
 		Usage()
 		os.Exit(1)
 	}
