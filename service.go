@@ -10,6 +10,10 @@ import (
 	"github.com/antonholmquist/jason"
 )
 
+var (
+	uptimeCounter = VarName("memstats.PauseTotalNs").ToSlice()
+)
+
 // Service represents constantly updating info about single service.
 type Service struct {
 	Port    string
@@ -18,8 +22,9 @@ type Service struct {
 
 	stacks map[VarName]*Stack
 
-	Err       error
-	Restarted bool
+	Err           error
+	Restarted     bool
+	UptimeCounter int64
 }
 
 // NewService returns new Service object.
@@ -46,6 +51,18 @@ func (s *Service) Update(wg *sync.WaitGroup) {
 		s.Restarted = true
 	}
 	s.Err = err
+
+	// if memstat.PauseTotalNs less than s.UptimeCounter
+	// then service was restarted
+	c, err := expvar.GetInt64(uptimeCounter...)
+	if err != nil {
+		s.Err = err
+	} else {
+		if s.UptimeCounter > c {
+			s.Restarted = true
+		}
+		s.UptimeCounter = c
+	}
 
 	// Update Cmdline & Name only once
 	if len(s.Cmdline) == 0 {
