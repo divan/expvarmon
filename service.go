@@ -11,6 +11,10 @@ import (
 )
 
 var (
+	// uptimeCounter is a variable used for tracking uptime status.
+	// It should be always incrementing and included into default expvar vars.
+	// Could be replaced with something different or made configurable in
+	// the future.
 	uptimeCounter = VarName("memstats.PauseTotalNs").ToSlice()
 )
 
