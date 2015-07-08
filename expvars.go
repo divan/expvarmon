@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/antonholmquist/jason"
@@ -17,13 +18,22 @@ type Expvar struct {
 	*jason.Object
 }
 
+func getBasicAuthEnv() (user, password string) {
+	return os.Getenv("HTTP_USER"), os.Getenv("HTTP_PASSWORD")
+}
+
 // FetchExpvar fetches expvar by http for the given addr (host:port)
 func FetchExpvar(addr string) (*Expvar, error) {
 	e := &Expvar{&jason.Object{}}
 	client := &http.Client{
 		Timeout: 1 * time.Second, // TODO: make it configurable or left default?
 	}
-	resp, err := client.Get(addr)
+
+	req, _ := http.NewRequest("GET", addr, nil)
+	if user, pass := getBasicAuthEnv(); user != "" && pass != "" {
+		req.SetBasicAuth(user, pass)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return e, err
 	}
