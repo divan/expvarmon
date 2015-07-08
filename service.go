@@ -112,6 +112,9 @@ func guessValue(value *jason.Value) interface{} {
 //
 // If host is not specified, 'localhost' is used.
 func (s Service) Addr() string {
+	if strings.HasPrefix(s.Port, "https://") {
+		return fmt.Sprintf("%s%s", s.Port, ExpvarsURL)
+	}
 	// Try as port only
 	_, err := strconv.Atoi(s.Port)
 	if err == nil {
