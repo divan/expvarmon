@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	urls     = &StringArray{}
 	interval = flag.Duration("i", 5*time.Second, "Polling interval")
 	portsArg = flag.String("ports", "", "Ports for accessing services expvars (start-end,port2,port3)")
 	varsArg  = flag.String("vars", "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.EnableGC,memstats.NumGC,duration:memstats.PauseTotalNs", "Vars to monitor (comma-separated)")
@@ -20,6 +21,7 @@ var (
 )
 
 func main() {
+	flag.Var(urls, "url", "urls to poll for expvars")
 	flag.Usage = Usage
 	flag.Parse()
 
@@ -31,6 +33,7 @@ func main() {
 			ports = append(ports, port)
 		}
 	}
+	ports = append(ports, *urls...)
 	if len(ports) == 0 {
 		fmt.Fprintln(os.Stderr, "no ports specified. Use -ports arg to specify ports of Go apps to monitor")
 		Usage()
