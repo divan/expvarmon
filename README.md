@@ -12,6 +12,7 @@ Go apps console monitoring tool. Minimal configuration efforts. Quick and easy m
 
 * Single- and multi-apps mode
 * Local and remote apps support
+* HTTP and HTTPS endpoints, including Basic Auth support
 * Arbitrary number of apps and vars to monitor (from 1 to 30+, depends on size of your terminal)
 * Track restarted/failed apps
 * Show maximum value
@@ -72,31 +73,41 @@ That's it.
 More examples:
 
     ./expvarmon -ports="80"
-    ./expvarmon -ports="23000-23010,80" -i=1m
+    ./expvarmon -ports="23000-23010,http://example.com:80-81" -i=1m
     ./expvarmon -ports="80,remoteapp:80" -vars="mem:memstats.Alloc,duration:Response.Mean,Counter"
     ./expvarmon -ports="1234-1236" -vars="Goroutines" -self
+    ./expvarmon -ports="https://user:pass@my.remote.app.com:443" -vars="Goroutines" -self
 
 ## Advanced usage
 
 If you need to monitor more (or less) vars, you can specify them with -vars command line flag.
 
     $ expvarmon -help
-    Usage of ./expvarmon:
-    -dummy=false: Use dummy (console) output
-    -i=5s: Polling interval
-    -ports="": Ports for accessing services expvars (start-end,port2,port3)
-    -self=false: Monitor itself
-    -vars="mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.EnableGC,memstats.NumGC,duration:memstats.PauseTotalNs": Vars to monitor (comma-separated)
-    Examples:
-        ./expvarmon -ports="80"
-        ./expvarmon -ports="23000-23010,80" -i=1m
-        ./expvarmon -ports="80,remoteapp:80" -vars="mem:memstats.Alloc,duration:Response.Mean,Counter"
-        ./expvarmon -ports="1234-1236" -vars="Goroutines" -self
-    For more details and docs, see README: http://github.com/divan/expvarmon
+	Usage of ./expvarmon:
+	  -dummy=false: Use dummy (console) output
+	  -i=5s: Polling interval
+	  -ports="": Ports/URLs for accessing services expvars (start-end,port2,port3,https://host:port)
+	  -self=false: Monitor itself
+	  -vars="mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.EnableGC,memstats.NumGC,duration:memstats.PauseTotalNs": Vars to monitor (comma-separated)
 
-So, yes, you can specify multiple ports, using '-' for ranges, and specify host(s) for remote apps.
+	Examples:
+		./expvarmon -ports="80"
+		./expvarmon -ports="23000-23010,http://example.com:80-81" -i=1m
+		./expvarmon -ports="80,remoteapp:80" -vars="mem:memstats.Alloc,duration:Response.Mean,Counter"
+		./expvarmon -ports="1234-1236" -vars="Goroutines" -self
+
+	For more details and docs, see README: http://github.com/divan/expvarmon
+
+So, yes, you can specify multiple ports, using '-' for ranges, and specify fully-qualified URLs for remote apps.
 
 You can also monitor expvarmon itself, using -self flag.
+
+### Basic Auth
+
+If your expvar endpoint is protected by Basic Auth, you have two options:
+
+ - Set environmental variables *HTTP_USER* and *HTTP_PASSWORD* accordingly. These values will be applied to each endpoint.
+ - Embed your credentials to URL via command line flag: `-ports="http://user:pass@myapp:1234"`
 
 ### Vars
 
@@ -113,9 +124,3 @@ Vars are specified as a comma-separated list of var identifiers with (optional) 
 | mem:      | renders int64 as memory string (KB, MB, etc) |
 | duration: | renders int64 as time.Duration (1s, 2ms, 12h23h) |
 | str:      | doesn't display sparklines chart for this value, just display as string |
-
-## TODO
-
-* ports auto-discovery for given hostname
-* more tests coverage
-* better usage of color highlighting (for max values or failed apps), after relevant patches will be merged to TermUI
