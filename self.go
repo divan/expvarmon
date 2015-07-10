@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"runtime"
 	"time"
 )
@@ -27,7 +28,7 @@ const startPort = 32768
 // StartSelfMonitor starts http server on random port and exports expvars.
 //
 // It tries 1024 ports, starting from startPort and registers some expvars if ok.
-func StartSelfMonitor() (string, error) {
+func StartSelfMonitor() (url.URL, error) {
 	for port := startPort; port < startPort+1024; port++ {
 		bind := fmt.Sprintf("localhost:%d", port)
 		l, err := net.Listen("tcp", bind)
@@ -39,8 +40,9 @@ func StartSelfMonitor() (string, error) {
 		expvar.Publish("Goroutines", expvar.Func(goroutines))
 		expvar.Publish("Uptime", expvar.Func(uptime))
 		go http.ListenAndServe(bind, nil)
-		return bind, nil
+
+		return NewURL(fmt.Sprintf("%d", port)), nil
 	}
 
-	return "", fmt.Errorf("no free ports found")
+	return url.URL{}, fmt.Errorf("no free ports found")
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 )
 
 // ExpvarsUrl is the default url for fetching expvar info.
-const ExpvarsURL = "/debug/vars"
+const ExpvarsPath = "/debug/vars"
 
 // Expvar represents fetched expvar variable.
 type Expvar struct {
@@ -23,13 +24,16 @@ func getBasicAuthEnv() (user, password string) {
 }
 
 // FetchExpvar fetches expvar by http for the given addr (host:port)
-func FetchExpvar(addr string) (*Expvar, error) {
+func FetchExpvar(u url.URL) (*Expvar, error) {
 	e := &Expvar{&jason.Object{}}
 	client := &http.Client{
 		Timeout: 1 * time.Second, // TODO: make it configurable or left default?
 	}
 
-	req, _ := http.NewRequest("GET", addr, nil)
+	req, _ := http.NewRequest("GET", "localhost", nil)
+	req.URL = &u
+	req.Host = u.Host
+
 	if user, pass := getBasicAuthEnv(); user != "" && pass != "" {
 		req.SetBasicAuth(user, pass)
 	}

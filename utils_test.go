@@ -32,7 +32,7 @@ func TestPorts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ports) != 2 || ports[0] != "1234" {
+	if len(ports) != 2 || ports[0].Host != "localhost:1234" {
 		t.Fatalf("ParsePorts returns wrong data: %v", ports)
 	}
 
@@ -41,16 +41,36 @@ func TestPorts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ports) != 5 || ports[0] != "1234" || ports[4] != "2000" {
+	if len(ports) != 5 || ports[0].Host != "localhost:1234" || ports[4].Host != "localhost:2000" {
 		t.Fatalf("ParsePorts returns wrong data: %v", ports)
 	}
 
-	arg = "localhost:2000-2002,remote:1234-1235"
+	arg = "40000-40002,localhost:2000-2002,remote:1234-1235,https://example.com:1234-1236"
 	ports, err = ParsePorts(arg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ports) != 5 || ports[0] != "localhost:2000" || ports[4] != "remote:1235" {
+	if len(ports) != 11 ||
+		ports[0].Host != "localhost:40000" ||
+		ports[3].Host != "localhost:2000" ||
+		ports[7].Host != "remote:1235" ||
+		ports[7].Path != "/debug/vars" ||
+		ports[10].Host != "example.com:1236" ||
+		ports[10].Scheme != "https" {
+		t.Fatalf("ParsePorts returns wrong data: %v", ports)
+	}
+
+	// Test Auth
+	arg = "http://user:pass@localhost:2000-2002"
+	ports, err = ParsePorts(arg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pass, isSet := ports[0].User.Password()
+	if len(ports) != 3 ||
+		ports[0].User.Username() != "user" ||
+		pass != "pass" || !isSet ||
+		ports[0].Scheme != "http" {
 		t.Fatalf("ParsePorts returns wrong data: %v", ports)
 	}
 

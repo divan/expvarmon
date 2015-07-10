@@ -23,7 +23,7 @@ func (*DummyUI) Update(data UIData) {
 	for _, service := range data.Services {
 		fmt.Printf("%s: ", service.Name)
 		if service.Err != nil {
-			fmt.Printf("ERROR: %s", service.Err)
+			fmt.Printf("ERROR: %s\n", service.Err)
 			continue
 		}
 

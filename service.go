@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"net"
-	"strconv"
+	"net/url"
 	"strings"
 	"sync"
 
@@ -20,7 +18,7 @@ var (
 
 // Service represents constantly updating info about single service.
 type Service struct {
-	Port    string
+	URL     url.URL
 	Name    string
 	Cmdline string
 
@@ -32,15 +30,15 @@ type Service struct {
 }
 
 // NewService returns new Service object.
-func NewService(port string, vars []VarName) *Service {
+func NewService(url url.URL, vars []VarName) *Service {
 	values := make(map[VarName]*Stack)
 	for _, name := range vars {
 		values[VarName(name)] = NewStack()
 	}
 
 	return &Service{
-		Name: port, // we have only port on start, so use it as name until resolved
-		Port: port,
+		Name: url.Host, // we have only port on start, so use it as name until resolved
+		URL:  url,
 
 		stacks: values,
 	}
@@ -49,7 +47,7 @@ func NewService(port string, vars []VarName) *Service {
 // Update updates Service info from Expvar variable.
 func (s *Service) Update(wg *sync.WaitGroup) {
 	defer wg.Done()
-	expvar, err := FetchExpvar(s.Addr())
+	expvar, err := FetchExpvar(s.URL)
 	// check for restart
 	if s.Err != nil && err == nil {
 		s.Restarted = true
@@ -106,27 +104,6 @@ func guessValue(value *jason.Value) interface{} {
 	}
 
 	return nil
-}
-
-// Addr returns fully qualified host:port pair for service.
-//
-// If host is not specified, 'localhost' is used.
-func (s Service) Addr() string {
-	if strings.HasPrefix(s.Port, "https://") {
-		return fmt.Sprintf("%s%s", s.Port, ExpvarsURL)
-	}
-	// Try as port only
-	_, err := strconv.Atoi(s.Port)
-	if err == nil {
-		return fmt.Sprintf("http://localhost:%s%s", s.Port, ExpvarsURL)
-	}
-
-	host, port, err := net.SplitHostPort(s.Port)
-	if err == nil {
-		return fmt.Sprintf("http://%s:%s%s", host, port, ExpvarsURL)
-	}
-
-	return ""
 }
 
 // Value returns current value for the given var of this service.
