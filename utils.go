@@ -131,7 +131,7 @@ func parseRange(s string) ([]string, error) {
 func NewURL(port string) url.URL {
 	return url.URL{
 		Scheme: "http",
-		Host:   fmt.Sprintf("localhost:%s"),
+		Host:   fmt.Sprintf("localhost:%s", port),
 		Path:   "/debug/vars",
 	}
 }
