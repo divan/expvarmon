@@ -16,7 +16,7 @@ Go apps console monitoring tool. Minimal configuration efforts. Quick and easy m
 * Arbitrary number of apps and vars to monitor (from 1 to 30+, depends on size of your terminal)
 * Track restarted/failed apps
 * Show maximum value
-* Supports: Integer, float, duration, memory, string, bool variables
+* Supports: Integer, float, duration, memory, string, bool, array variables
 * Sparkline charts for integer, duration and memory data
 * Auto-resize on font-size change or window resize
 * Uses amazing [TermUI](https://github.com/gizak/termui) library by [gizak](https://github.com/gizak)
