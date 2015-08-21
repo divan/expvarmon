@@ -37,6 +37,14 @@ func TestExpvars(t *testing.T) {
 	if alloc == 0 {
 		t.Fatalf("Alloc should be greater than 0")
 	}
+
+	pauses, err := expvar.GetInt64Array(VarName("memstats.PauseNs").ToSlice()...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pauses) == 0 {
+		t.Fatalf("Pauses length should be greater than 0")
+	}
 }
 
 func TestExpvarsAdvanced(t *testing.T) {

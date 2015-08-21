@@ -101,6 +101,22 @@ func guessValue(value *jason.Value) interface{} {
 		return v
 	} else if v, err := value.String(); err == nil {
 		return v
+	} else if v, err := value.Array(); err == nil {
+		// if we get an array, calculate average
+
+		// empty array, treat as zero
+		if len(v) == 0 {
+			return 0
+		}
+
+		avg := averageJason(v)
+
+		// cast to int64 for Int64 values
+		if _, err := v[0].Int64(); err == nil {
+			return int64(avg)
+		}
+
+		return avg
 	}
 
 	return nil
