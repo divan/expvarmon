@@ -88,7 +88,7 @@ If you need to monitor more (or less) vars, you can specify them with -vars comm
 	  -i=5s: Polling interval
 	  -ports="": Ports/URLs for accessing services expvars (start-end,port2,port3,https://host:port)
 	  -self=false: Monitor itself
-	  -vars="mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.EnableGC,memstats.NumGC,duration:memstats.PauseTotalNs": Vars to monitor (comma-separated)
+	  -vars="mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,duration:memstats.PauseNs,duration:memstats.PauseTotalNs": Vars to monitor (comma-separated)
 
 	Examples:
 		./expvarmon -ports="80"
@@ -115,7 +115,7 @@ Expvarmon doesn't restrict you to monitor only memstats. You can publish your ow
 
 Notation is dot-separated, for example: **memstats.Alloc** for .MemStats.Alloc field. Quick link to runtime.MemStats documentation: http://golang.org/pkg/runtime/#MemStats
 
-Expvar allows to export only basic types - structs, ints, floats, bools and strings. Ints are used for sparklines, and displayed as is. But you can specify modifier to make sure it will be rendered properly.
+Expvar allows to export only basic types - structs, ints, floats, arrays (int or float), bools and strings. For arrays, average will be calculated. Ints are used for sparklines, and displayed as is. But you can specify modifier to make sure it will be rendered properly.
 
 Vars are specified as a comma-separated list of var identifiers with (optional) modifiers.
 
