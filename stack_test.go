@@ -2,6 +2,13 @@ package main
 
 import "testing"
 
+func TestPushWithFloatAndIntValue(t *testing.T) {
+	s := NewStack()
+	s.Push(VarValue(int64(0.0))) // from service.go:guessValue
+	s.Push(VarValue(5.0))
+	s.Push(VarValue(float64(15.0)))
+}
+
 func TestStack(t *testing.T) {
 	size := 10
 	s := NewStackWithSize(size)
