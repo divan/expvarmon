@@ -33,14 +33,33 @@ func (s *Stack) Push(val VarValue) {
 		s.Values = s.Values[1:]
 	}
 
+	if s.Max == nil {
+		s.Max = val
+		return
+	}
+
 	switch val.(type) {
 	case int64:
-		if s.Max == nil || val.(int64) > s.Max.(int64) {
-			s.Max = val
+		switch s.Max.(type) {
+		case int64:
+			if val.(int64) > s.Max.(int64) {
+				s.Max = val
+			}
+		case float64:
+			if float64(val.(int64)) > s.Max.(float64) {
+				s.Max = val
+			}
 		}
 	case float64:
-		if s.Max == nil || val.(float64) > s.Max.(float64) {
-			s.Max = val
+		switch s.Max.(type) {
+		case int64:
+			if val.(float64) > float64(s.Max.(int64)) {
+				s.Max = val
+			}
+		case float64:
+			if val.(float64) > s.Max.(float64) {
+				s.Max = val
+			}
 		}
 	}
 }
