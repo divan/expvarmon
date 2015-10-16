@@ -35,7 +35,9 @@ func StartSelfMonitor() (url.URL, error) {
 		if err != nil {
 			continue
 		}
-		l.Close()
+		if err := l.Close(); err != nil {
+			continue
+		}
 
 		expvar.Publish("Goroutines", expvar.Func(goroutines))
 		expvar.Publish("Uptime", expvar.Func(uptime))

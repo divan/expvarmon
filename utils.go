@@ -49,17 +49,17 @@ func flattenURLs(rawurl string, ports []string) ([]url.URL, error) {
 	}
 
 	// Make URL from rawurl
-	baseUrl, err := url.Parse(rawurl)
+	baseURL, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, err
 	}
-	if baseUrl.Path == "" {
-		baseUrl.Path = DefaultEndpoint
+	if baseURL.Path == "" {
+		baseURL.Path = DefaultEndpoint
 	}
 
 	// Create new URL for each port
 	for _, port := range ports {
-		u := *baseUrl
+		u := *baseURL
 		u.Host = fmt.Sprintf("%s:%s", u.Host, port)
 		urls = append(urls, u)
 	}
@@ -71,7 +71,7 @@ func ParsePorts(s string) ([]url.URL, error) {
 	var urls []url.URL
 	fields := strings.FieldsFunc(s, func(r rune) bool { return r == ',' })
 	for _, field := range fields {
-		rawurl, portsRange := extractUrlAndPorts(field)
+		rawurl, portsRange := extractURLAndPorts(field)
 
 		ports, err := parseRange(portsRange)
 		if err != nil {
@@ -94,7 +94,7 @@ func ParsePorts(s string) ([]url.URL, error) {
 //
 // i.e. "http://name:1234-1236/_endpoint" would return "http://name/_endpoint" and
 // "1234-1236"
-func extractUrlAndPorts(s string) (string, string) {
+func extractURLAndPorts(s string) (string, string) {
 	var rawurl, ports string
 	parts := strings.Split(s, ":")
 	switch len(parts) {

@@ -28,22 +28,22 @@ func TestUtils(t *testing.T) {
 
 func TestExtractUrlAndPorts(t *testing.T) {
 	var rawurl, ports string
-	rawurl, ports = extractUrlAndPorts("40000-40002")
+	rawurl, ports = extractURLAndPorts("40000-40002")
 	if rawurl != "http://localhost" || ports != "40000-40002" {
 		t.Fatalf("extract url and ports failed: %v, %v", rawurl, ports)
 	}
 
-	rawurl, ports = extractUrlAndPorts("https://example.com:1234")
+	rawurl, ports = extractURLAndPorts("https://example.com:1234")
 	if rawurl != "https://example.com" || ports != "1234" {
 		t.Fatalf("extract url and ports failed: %v, %v", rawurl, ports)
 	}
 
-	rawurl, ports = extractUrlAndPorts("http://user:passwd@example.com:1234-1256")
+	rawurl, ports = extractURLAndPorts("http://user:passwd@example.com:1234-1256")
 	if rawurl != "http://user:passwd@example.com" || ports != "1234-1256" {
 		t.Fatalf("extract url and ports failed: %v, %v", rawurl, ports)
 	}
 
-	rawurl, ports = extractUrlAndPorts("https://example.com:1234-1256/_endpoint")
+	rawurl, ports = extractURLAndPorts("https://example.com:1234-1256/_endpoint")
 	if rawurl != "https://example.com/_endpoint" || ports != "1234-1256" {
 		t.Fatalf("extract url and ports failed: %v, %v", rawurl, ports)
 	}
