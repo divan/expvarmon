@@ -82,13 +82,20 @@ More examples:
 
 If you need to monitor more (or less) vars, you can specify them with -vars command line flag.
 
-    $ expvarmon -help
+    $ no ports specified. Use -ports arg to specify ports of Go apps to monitor
 	Usage of ./expvarmon:
-	  -dummy=false: Use dummy (console) output
-	  -i=5s: Polling interval
-	  -ports="": Ports/URLs for accessing services expvars (start-end,port2,port3,https://host:port)
-	  -self=false: Monitor itself
-	  -vars="mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,duration:memstats.PauseNs,duration:memstats.PauseTotalNs": Vars to monitor (comma-separated)
+	  -dummy
+	    	Use dummy (console) output
+	  -endpoint string
+	    	URL endpoint for expvars (default "/debug/vars")
+	  -i duration
+	    	Polling interval (default 5s)
+	  -ports string
+	    	Ports/URLs for accessing services expvars (start-end,port2,port3,https://host:port)
+	  -self
+	    	Monitor itself
+	  -vars string
+	    	Vars to monitor (comma-separated) (default "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,duration:memstats.PauseNs,duration:memstats.PauseTotalNs")
 
 	Examples:
 		./expvarmon -ports="80"
@@ -98,7 +105,8 @@ If you need to monitor more (or less) vars, you can specify them with -vars comm
 
 	For more details and docs, see README: http://github.com/divan/expvarmon
 
-So, yes, you can specify multiple ports, using '-' for ranges, and specify fully-qualified URLs for remote apps.
+
+So, yes, you can specify multiple ports, using '-' for ranges, and specify fully-qualified URLs for remote apps. To override default URL endpoint ("/debug/vars"), use -endpoint flag.
 
 You can also monitor expvarmon itself, using -self flag.
 
