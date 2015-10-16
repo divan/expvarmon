@@ -26,6 +26,29 @@ func TestUtils(t *testing.T) {
 	}
 }
 
+func TestExtractUrlAndPorts(t *testing.T) {
+	var rawurl, ports string
+	rawurl, ports = extractUrlAndPorts("40000-40002")
+	if rawurl != "http://localhost" || ports != "40000-40002" {
+		t.Fatalf("extract url and ports failed: %v, %v", rawurl, ports)
+	}
+
+	rawurl, ports = extractUrlAndPorts("https://example.com:1234")
+	if rawurl != "https://example.com" || ports != "1234" {
+		t.Fatalf("extract url and ports failed: %v, %v", rawurl, ports)
+	}
+
+	rawurl, ports = extractUrlAndPorts("http://user:passwd@example.com:1234-1256")
+	if rawurl != "http://user:passwd@example.com" || ports != "1234-1256" {
+		t.Fatalf("extract url and ports failed: %v, %v", rawurl, ports)
+	}
+
+	rawurl, ports = extractUrlAndPorts("https://example.com:1234-1256/_endpoint")
+	if rawurl != "https://example.com/_endpoint" || ports != "1234-1256" {
+		t.Fatalf("extract url and ports failed: %v, %v", rawurl, ports)
+	}
+}
+
 func TestPorts(t *testing.T) {
 	arg := "1234,1235"
 	ports, err := ParsePorts(arg)
@@ -84,5 +107,15 @@ func TestPorts(t *testing.T) {
 	_, err = ParsePorts(arg)
 	if err == nil {
 		t.Fatalf("err shouldn't be nil")
+	}
+
+	// Test endpoints
+	arg = "localhost:2000,https://example.com:1234/_custom_expvars"
+	ports, err = ParsePorts(arg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ports[0].Path != "/debug/vars" || ports[1].Path != "/_custom_expvars" {
+		t.Fatalf("ParsePorts returns wrong data: %v", ports)
 	}
 }

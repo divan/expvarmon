@@ -11,8 +11,8 @@ import (
 	"github.com/antonholmquist/jason"
 )
 
-// ExpvarsUrl is the default url for fetching expvar info.
-const ExpvarsPath = "/debug/vars"
+// DefaultEndpoint is the default url for fetching expvar info.
+var DefaultEndpoint = "/debug/vars"
 
 // Expvar represents fetched expvar variable.
 type Expvar struct {

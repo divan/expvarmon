@@ -17,11 +17,14 @@ var (
 	varsArg  = flag.String("vars", "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,duration:memstats.PauseNs,duration:memstats.PauseTotalNs", "Vars to monitor (comma-separated)")
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
 	self     = flag.Bool("self", false, "Monitor itself")
+	endpoint = flag.String("endpoint", DefaultEndpoint, "URL endpoint for expvars")
 )
 
 func main() {
 	flag.Usage = Usage
 	flag.Parse()
+
+	DefaultEndpoint = *endpoint
 
 	// Process ports/urls
 	ports, _ := ParsePorts(*urls)
