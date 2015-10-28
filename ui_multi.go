@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gizak/termui"
+	"gopkg.in/gizak/termui.v1"
 )
 
 // TermUI is a termUI implementation of UI interface.

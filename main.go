@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gizak/termui"
+	"gopkg.in/gizak/termui.v1"
 )
 
 var (
