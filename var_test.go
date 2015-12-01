@@ -44,4 +44,49 @@ func TestVarName(t *testing.T) {
 	if kind != KindDuration {
 		t.Fatalf("Expecting kind to be %v, but got: %v", KindDuration, kind)
 	}
+
+	// single \. escapes the dot
+	v = VarName(`bleve.indexes.bench\.bleve.index.lookup_queue_len`)
+
+	slice = v.ToSlice()
+	if len(slice) != 5 || slice[0] != "bleve" || slice[1] != "indexes" || slice[2] != "bench.bleve" ||
+		slice[3] != "index" || slice[4] != "lookup_queue_len" {
+		t.Fatalf("ToSlice failed: %v", slice)
+	}
+
+	// double \\. escapes backslash, not dot
+	v = VarName(`bleve.indexes.bench\\.bleve.index.lookup_queue_len`)
+
+	slice = v.ToSlice()
+	if len(slice) != 6 || slice[0] != "bleve" || slice[1] != "indexes" || slice[2] != "bench\\" ||
+		slice[3] != "bleve" || slice[4] != "index" || slice[5] != "lookup_queue_len" {
+		t.Fatalf("ToSlice failed: %v", slice)
+	}
+
+	// triple \\\. escapes backslash then dot
+	v = VarName(`bleve.indexes.bench\\\.bleve.index.lookup_queue_len`)
+
+	slice = v.ToSlice()
+	if len(slice) != 5 || slice[0] != "bleve" || slice[1] != "indexes" || slice[2] != "bench\\.bleve" ||
+		slice[3] != "index" || slice[4] != "lookup_queue_len" {
+		t.Fatalf("ToSlice failed: %v", slice)
+	}
+
+	// quadruple \\\\. escapes two backslashes, not dot
+	v = VarName(`bleve.indexes.bench\\\\.bleve.index.lookup_queue_len`)
+
+	slice = v.ToSlice()
+	if len(slice) != 6 || slice[0] != "bleve" || slice[1] != "indexes" || slice[2] != "bench\\\\" ||
+		slice[3] != "bleve" || slice[4] != "index" || slice[5] != "lookup_queue_len" {
+		t.Fatalf("ToSlice failed: %v", slice)
+	}
+
+	// unsupported \x passes through unaltered
+	v = VarName(`bleve.indexes.bench\xbleve.index.lookup_queue_len`)
+
+	slice = v.ToSlice()
+	if len(slice) != 5 || slice[0] != "bleve" || slice[1] != "indexes" || slice[2] != "bench\\xbleve" ||
+		slice[3] != "index" || slice[4] != "lookup_queue_len" {
+		t.Fatalf("ToSlice failed: %v", slice)
+	}
 }

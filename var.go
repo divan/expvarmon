@@ -38,7 +38,7 @@ const (
 // Example: "mem:memstats.Alloc" => []string{"memstats", "Alloc"}
 func (v VarName) ToSlice() []string {
 	start := strings.IndexRune(string(v), ':') + 1
-	slice := strings.FieldsFunc(string(v)[start:], func(r rune) bool { return r == '.' })
+	slice := DottedFieldsToSliceEscaped(string(v)[start:])
 	return slice
 }
 
@@ -127,4 +127,48 @@ func roundDuration(d time.Duration) time.Duration {
 		return -d
 	}
 	return d
+}
+
+func DottedFieldsToSliceEscaped(s string) []string {
+	rv := make([]string, 0)
+	lastSlash := false
+	curr := ""
+	for _, r := range s {
+		// base case, dot not after slash
+		if !lastSlash && r == '.' {
+			if len(curr) > 0 {
+				rv = append(rv, curr)
+				curr = ""
+			}
+			continue
+		} else if !lastSlash {
+			// any character not after slash
+			curr += string(r)
+			if r == '\\' {
+				lastSlash = true
+			} else {
+				lastSlash = false
+			}
+			continue
+		} else if r == '\\' {
+			// last was slash, and so is this
+			lastSlash = false // 2 slashes = 0
+			// we already appended a single slash on first
+			continue
+		} else if r == '.' {
+			// we see \. but already appended \ last time
+			// replace it with .
+			curr = curr[:len(curr)-1] + "."
+			lastSlash = false
+		} else {
+			// \ and any other character, ignore
+			curr += string(r)
+			lastSlash = false
+			continue
+		}
+	}
+	if len(curr) > 0 {
+		rv = append(rv, curr)
+	}
+	return rv
 }
