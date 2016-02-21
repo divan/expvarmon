@@ -24,7 +24,7 @@ func (t *TermUI) Init(data UIData) error {
 		return err
 	}
 
-	termui.UseTheme("helloworld")
+	termui.UseTheme(data.UITheme)
 
 	t.Title = func() *termui.Par {
 		p := termui.NewPar("")

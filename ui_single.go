@@ -25,7 +25,7 @@ func (t *TermUISingle) Init(data UIData) error {
 
 	t.Sparklines = make(map[VarName]*termui.Sparkline)
 
-	termui.UseTheme("helloworld")
+	termui.UseTheme(data.UITheme)
 
 	t.Title = func() *termui.Par {
 		p := termui.NewPar("")
