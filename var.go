@@ -89,6 +89,9 @@ func Format(v VarValue, kind VarKind) string {
 		}
 		return fmt.Sprintf("%s", byten.Size(v.(int64)))
 	case KindDuration:
+		if _, ok := v.(float64); ok {
+			return fmt.Sprintf("%s", roundDuration(time.Duration(v.(float64))))
+		}
 		if _, ok := v.(int64); !ok {
 			break
 		}
