@@ -96,17 +96,17 @@ func (t *TermUISingle) Update(data UIData) {
 		if !ok {
 			continue
 		}
-		data.Stacks[name].Push(v)
-		data.Stats[name].Update(v)
+		data.SparklineData[0].Stacks[name].Push(v)
+		data.SparklineData[0].Stats[name].Update(v)
 
 		spl := &t.Sparkline.Lines[i]
 
-		max := data.Stats[name].Max().String()
+		max := data.SparklineData[i].Stats[name].Max().String()
 		spl.Title = fmt.Sprintf("%s: %v (max: %v)", name.Long(), service.Value(name), max)
 		spl.TitleColor = colorByKind(name.Kind())
 		spl.LineColor = colorByKind(name.Kind())
 
-		spl.Data = data.Stacks[name].Values()
+		spl.Data = data.SparklineData[0].Stacks[name].Values()
 	}
 
 	t.Relayout()

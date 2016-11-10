@@ -52,15 +52,16 @@ func main() {
 	}
 
 	// Init UIData
-	data := NewUIData(vars)
+	var services []*Service
 	for _, port := range ports {
 		service := NewService(port, vars)
-		data.Services = append(data.Services, service)
+		services = append(services, service)
 	}
+	data := NewUIData(vars, services)
 
 	// Start proper UI
 	var ui UI
-	if len(data.Services) > 1 {
+	if len(services) > 1 {
 		ui = &TermUI{}
 	} else {
 		ui = &TermUISingle{}
