@@ -68,7 +68,7 @@ func (t *TermUI) Init(data UIData) error {
 		var sparklines []termui.Sparkline
 		for _, service := range data.Services {
 			spl := termui.NewSparkline()
-			spl.Height = 1
+			spl.Height = 1 // TODO: set height to th/len(services)
 			spl.LineColor = termui.ColorGreen
 			spl.Title = service.Name
 			sparklines = append(sparklines, spl)
@@ -113,14 +113,28 @@ func (t *TermUI) Update(data UIData) {
 
 	// Sparklines
 	for i, service := range data.Services {
-		max := "MAX" // TODO: FIXME: formatMax(service.Max(data.Vars[0]))
-		t.Sparkline1.Lines[i].Title = fmt.Sprintf("%s%s", service.Name, max)
-		t.Sparkline1.Lines[i].Data = []int{} // TODO: service.Values(data.Vars[0])
+		name := data.Vars[0]
+		v, ok := service.Vars[name].(IntVar)
+		if ok {
+			data.Stacks[name].Push(v)
+			data.Stats[name].Update(v)
+			max := data.Stats[name].Max().String()
+			t.Sparkline1.Lines[i].Title = fmt.Sprintf("%s (max: %s)", service.Name, max)
+			t.Sparkline1.Lines[i].Data = data.Stacks[name].IntValues()
+		}
 
-		if len(data.Vars) > 1 {
-			max = "MAX" // TODO: FIXME: formatMax(service.Max(data.Vars[1]))
-			t.Sparkline2.Lines[i].Title = fmt.Sprintf("%s%s", service.Name, max)
-			t.Sparkline2.Lines[i].Data = []int{} // TODO: service.Values(data.Vars[1])
+		if len(data.Vars) == 1 {
+			continue
+		}
+
+		name = data.Vars[1]
+		v, ok = service.Vars[name].(IntVar)
+		if ok {
+			data.Stacks[name].Push(v)
+			data.Stats[name].Update(v)
+			max := data.Stats[name].Max().String()
+			t.Sparkline2.Lines[i].Title = fmt.Sprintf("%s (max: %s)", service.Name, max)
+			t.Sparkline2.Lines[i].Data = data.Stacks[name].IntValues()
 		}
 	}
 

@@ -27,6 +27,13 @@ type Var interface {
 	Set(*jason.Value)
 }
 
+// IntVar represents variable which value can be represented as integer,
+// and suitable for displaying with sparklines.
+type IntVar interface {
+	Var
+	Value() int
+}
+
 type Number struct {
 	// TODO: add mutex here or level above, in service?
 	val float64
@@ -46,6 +53,11 @@ func (v *Number) Set(j *jason.Value) {
 	}
 }
 
+// Value implements IntVar for Number type.
+func (v *Number) Value() int {
+	return int(v.val)
+}
+
 type Memory struct {
 	bytes int64
 }
@@ -60,6 +72,12 @@ func (v *Memory) Set(j *jason.Value) {
 	} else {
 		v.bytes = 0
 	}
+}
+
+// Value implements IntVar for Memory type.
+func (v *Memory) Value() int {
+	// TODO: check for possible overflows
+	return int(v.bytes)
 }
 
 type Duration struct {
@@ -79,6 +97,12 @@ func (v *Duration) Set(j *jason.Value) {
 	} else {
 		v.dur = 0
 	}
+}
+
+// Value implements IntVar for Duration type.
+func (v *Duration) Value() int {
+	// TODO: check for possible overflows
+	return int(v.dur)
 }
 
 type String struct {
