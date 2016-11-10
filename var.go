@@ -34,8 +34,10 @@ type IntVar interface {
 	Value() int
 }
 
+// Number is a type for numeric values, obtained from JSON.
+// In JSON it's always float64, so there is no straightforward way
+// to separate float from int, so let's keep everything as float.
 type Number struct {
-	// TODO: add mutex here or level above, in service?
 	val float64
 }
 
@@ -58,6 +60,7 @@ func (v *Number) Value() int {
 	return int(v.val)
 }
 
+// Memory represents memory information in bytes.
 type Memory struct {
 	bytes int64
 }
@@ -80,6 +83,7 @@ func (v *Memory) Value() int {
 	return int(v.bytes)
 }
 
+// Duration represents duration data (in ns)
 type Duration struct {
 	dur time.Duration
 }
@@ -105,6 +109,7 @@ func (v *Duration) Value() int {
 	return int(v.dur)
 }
 
+// Strings represents string data.
 type String struct {
 	str string
 }

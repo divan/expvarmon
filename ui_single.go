@@ -106,7 +106,7 @@ func (t *TermUISingle) Update(data UIData) {
 		spl.TitleColor = colorByKind(name.Kind())
 		spl.LineColor = colorByKind(name.Kind())
 
-		spl.Data = data.Stacks[name].IntValues()
+		spl.Data = data.Stacks[name].Values()
 	}
 
 	t.Relayout()
