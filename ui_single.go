@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/divan/gcpauses"
+	"runtime"
 	"time"
 
 	"gopkg.in/gizak/termui.v1"
@@ -14,6 +16,7 @@ type TermUISingle struct {
 	Sparklines map[VarName]*termui.Sparkline
 	Sparkline  *termui.Sparklines
 	Pars       []*termui.Par
+	BarChart   *termui.BarChart
 }
 
 // Init creates widgets, sets sizes and labels.
@@ -72,6 +75,15 @@ func (t *TermUISingle) Init(data UIData) error {
 		return s
 	}()
 
+	t.BarChart = func() *termui.BarChart {
+		bc := termui.NewBarChart()
+		bc.Border.Label = "Bar Chart"
+		bc.TextColor = termui.ColorGreen
+		bc.BarColor = termui.ColorGreen
+		bc.NumColor = termui.ColorBlack
+		return bc
+	}()
+
 	t.Relayout()
 
 	return nil
@@ -105,10 +117,26 @@ func (t *TermUISingle) Update(data UIData) {
 		spl.Data = service.Values(name)
 	}
 
+	// BarChart
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	p := gcpauses.NewGCPauses(&m)
+	values, counts := p.Histogram(25)
+	vals := make([]int, 0, len(counts))
+	labels := make([]string, 0, len(counts))
+	for i := 0; i < len(counts); i++ {
+		vals = append(vals, int(counts[i]))
+		d := time.Duration(values[i])
+		labels = append(labels, d.String())
+	}
+	t.BarChart.Data = vals
+	t.BarChart.DataLabels = labels
+	t.BarChart.Border.Label = fmt.Sprintf("%v", len(counts))
+
 	t.Relayout()
 
 	var widgets []termui.Bufferer
-	widgets = append(widgets, t.Title, t.Status, t.Sparkline)
+	widgets = append(widgets, t.Title, t.Status, t.Sparkline, t.BarChart)
 	for _, par := range t.Pars {
 		widgets = append(widgets, par)
 	}
@@ -154,8 +182,14 @@ func (t *TermUISingle) Relayout() {
 
 	// Third row: Sparklines
 	t.Sparkline.Width = tw
-	t.Sparkline.Height = h
+	t.Sparkline.Height = h / 2
 	t.Sparkline.Y = th - h
+
+	// Fourth row: Barchart
+	t.BarChart.Width = tw
+	t.BarChart.Height = h / 2
+	t.BarChart.Y = th - h/2
+	t.BarChart.BarWidth = 10
 }
 
 func formatMax(max interface{}) string {
