@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/antonholmquist/jason"
 	"github.com/pyk/byten"
 )
 
@@ -19,8 +20,100 @@ type VarName string
 // VarKind specifies special kinds of values, affects formatting.
 type VarKind int
 
-// VarValue represents arbitrary value for variable.
-type VarValue interface{}
+// Var represents arbitrary value for variable.
+type Var interface {
+	Kind() VarKind
+	String() string
+	Set(*jason.Value)
+}
+
+type Number struct {
+	// TODO: add mutex here or level above, in service?
+	val float64
+}
+
+func (v *Number) Kind() VarKind { return KindDefault }
+func (v *Number) String() string {
+	return fmt.Sprintf("%.02f", v.val)
+}
+func (v *Number) Set(j *jason.Value) {
+	if n, err := j.Int64(); err == nil {
+		v.val = float64(n)
+	} else if n, err := j.Float64(); err == nil {
+		v.val = n
+	} else {
+		v.val = 0
+	}
+}
+
+type Memory struct {
+	bytes int64
+}
+
+func (v *Memory) Kind() VarKind { return KindMemory }
+func (v *Memory) String() string {
+	return fmt.Sprintf("%s", byten.Size(v.bytes))
+}
+func (v *Memory) Set(j *jason.Value) {
+	if n, err := j.Int64(); err == nil {
+		v.bytes = n
+	} else {
+		v.bytes = 0
+	}
+}
+
+type Duration struct {
+	dur time.Duration
+}
+
+func (v *Duration) Kind() VarKind { return KindDuration }
+func (v *Duration) String() string {
+	return fmt.Sprintf("%s", roundDuration(time.Duration(v.dur)))
+}
+
+func (v *Duration) Set(j *jason.Value) {
+	if n, err := j.Int64(); err == nil {
+		v.dur = time.Duration(n)
+	} else if n, err := j.Float64(); err == nil {
+		v.dur = time.Duration(int64(n))
+	} else {
+		v.dur = 0
+	}
+}
+
+type String struct {
+	str string
+}
+
+func (v *String) Kind() VarKind  { return KindString }
+func (v *String) String() string { return v.str }
+func (v *String) Set(j *jason.Value) {
+	if n, err := j.String(); err == nil {
+		v.str = n
+	} else {
+		v.str = "N/A"
+	}
+}
+
+// TODO: add boolean, timestamp, gcpauses, gcendtimes types
+
+// NewVar inits new Var object with the given name.
+func NewVar(name VarName) Var {
+	kind := name.Kind()
+
+	switch kind {
+	case KindDefault:
+		return &Number{}
+	case KindMemory:
+		return &Memory{}
+	case KindDuration:
+		return &Duration{}
+	case KindString:
+		return &String{}
+	default:
+		return &Number{}
+	}
+}
 
 const (
 	KindDefault VarKind = iota
@@ -78,31 +171,6 @@ func (v VarName) Kind() VarKind {
 		return KindString
 	}
 	return KindDefault
-}
-
-// Format returns human-readable var value representation.
-func Format(v VarValue, kind VarKind) string {
-	switch kind {
-	case KindMemory:
-		if _, ok := v.(int64); !ok {
-			break
-		}
-		return fmt.Sprintf("%s", byten.Size(v.(int64)))
-	case KindDuration:
-		if _, ok := v.(float64); ok {
-			return fmt.Sprintf("%s", roundDuration(time.Duration(v.(float64))))
-		}
-		if _, ok := v.(int64); !ok {
-			break
-		}
-		return fmt.Sprintf("%s", roundDuration(time.Duration(v.(int64))))
-	}
-
-	if f, ok := v.(float64); ok {
-		return fmt.Sprintf("%.2f", f)
-	}
-
-	return fmt.Sprintf("%v", v)
 }
 
 // roundDuration removes unneeded precision from the String() output for time.Duration.

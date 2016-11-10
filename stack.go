@@ -8,9 +8,9 @@ const DefaultSize = 1200
 
 // Stack is a limited FIFO for holding sparkline values.
 type Stack struct {
-	Values []VarValue
+	Values []Var
 	Len    int
-	Max    VarValue
+	Max    Var
 }
 
 // NewStack inits new Stack with default size limit.
@@ -21,13 +21,15 @@ func NewStack() *Stack {
 // NewStackWithSize inits new Stack with size limit.
 func NewStackWithSize(size int) *Stack {
 	return &Stack{
-		Values: make([]VarValue, size),
+		Values: make([]Var, size),
 		Len:    size,
 	}
 }
 
+/*
+TODO: FIXME: review or remove this code
 // Push inserts data to stack, preserving constant length.
-func (s *Stack) Push(val VarValue) {
+func (s *Stack) Push(val Var) {
 	s.Values = append(s.Values, val)
 	if len(s.Values) > s.Len {
 		s.Values = s.Values[1:]
@@ -65,7 +67,7 @@ func (s *Stack) Push(val VarValue) {
 }
 
 // Front returns front value.
-func (s *Stack) Front() VarValue {
+func (s *Stack) Front() Var {
 	if len(s.Values) == 0 {
 		return nil
 	}
@@ -103,3 +105,4 @@ func (s *Stack) IntValues() []int {
 	}
 	return ret
 }
+*/

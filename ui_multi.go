@@ -113,14 +113,14 @@ func (t *TermUI) Update(data UIData) {
 
 	// Sparklines
 	for i, service := range data.Services {
-		max := formatMax(service.Max(data.Vars[0]))
+		max := "MAX" // TODO: FIXME: formatMax(service.Max(data.Vars[0]))
 		t.Sparkline1.Lines[i].Title = fmt.Sprintf("%s%s", service.Name, max)
-		t.Sparkline1.Lines[i].Data = service.Values(data.Vars[0])
+		t.Sparkline1.Lines[i].Data = []int{} // TODO: service.Values(data.Vars[0])
 
 		if len(data.Vars) > 1 {
-			max = formatMax(service.Max(data.Vars[1]))
+			max = "MAX" // TODO: FIXME: formatMax(service.Max(data.Vars[1]))
 			t.Sparkline2.Lines[i].Title = fmt.Sprintf("%s%s", service.Name, max)
-			t.Sparkline2.Lines[i].Data = service.Values(data.Vars[1])
+			t.Sparkline2.Lines[i].Data = []int{} // TODO: service.Values(data.Vars[1])
 		}
 	}
 

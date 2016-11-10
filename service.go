@@ -22,7 +22,7 @@ type Service struct {
 	Name    string
 	Cmdline string
 
-	stacks map[VarName]*Stack
+	Vars map[VarName]Var
 
 	Err           error
 	Restarted     bool
@@ -30,17 +30,18 @@ type Service struct {
 }
 
 // NewService returns new Service object.
-func NewService(url url.URL, vars []VarName) *Service {
-	values := make(map[VarName]*Stack)
-	for _, name := range vars {
-		values[VarName(name)] = NewStack()
+func NewService(url url.URL, varNames []VarName) *Service {
+	vars := make(map[VarName]Var)
+	for _, name := range varNames {
+		v := NewVar(name)
+		vars[name] = v
 	}
 
 	return &Service{
 		Name: url.Host, // we have only port on start, so use it as name until resolved
 		URL:  url,
 
-		stacks: values,
+		Vars: vars,
 	}
 }
 
@@ -77,21 +78,19 @@ func (s *Service) Update(wg *sync.WaitGroup) {
 		}
 	}
 
-	// For all vars, fetch desired value from Json and push to it's own stack.
-	for name, stack := range s.stacks {
+	// For all vars, fetch desired value from JSON
+	for name, v := range s.Vars {
 		value, err := expvar.GetValue(name.ToSlice()...)
 		if err != nil {
-			stack.Push(nil)
+			v.Set(nil)
 			continue
 		}
-		v := guessValue(value)
-		if v != nil {
-			stack.Push(v)
-		}
+		v.Set(value)
 	}
 }
 
 // guessValue attemtps to bruteforce all supported types.
+// TODO: FIXME: remove this func
 func guessValue(value *jason.Value) interface{} {
 	if v, err := value.Int64(); err == nil {
 		return v
@@ -122,48 +121,11 @@ func guessValue(value *jason.Value) interface{} {
 	return nil
 }
 
-// Value returns current value for the given var of this service.
-//
-// It also formats value, if kind is specified.
+// Value returns current value for the given varable of this service.
 func (s Service) Value(name VarName) string {
-	if s.Err != nil {
-		return "N/A"
-	}
-	val, ok := s.stacks[name]
+	v, ok := s.Vars[name]
 	if !ok {
-		return "N/A"
+		return ""
 	}
-
-	v := val.Front()
-	if v == nil {
-		return "N/A"
-	}
-
-	return Format(v, name.Kind())
-}
-
-// Values returns slice of ints with recent
-// values of the given var, to be used with sparkline.
-func (s Service) Values(name VarName) []int {
-	stack, ok := s.stacks[name]
-	if !ok {
-		return nil
-	}
-
-	return stack.IntValues()
-}
-
-// Max returns maximum recorded value for given service and var.
-func (s Service) Max(name VarName) interface{} {
-	val, ok := s.stacks[name]
-	if !ok {
-		return nil
-	}
-
-	v := val.Max
-	if v == nil {
-		return nil
-	}
-
-	return Format(v, name.Kind())
+	return v.String()
 }

@@ -94,7 +94,7 @@ func (t *TermUISingle) Update(data UIData) {
 	for i, name := range data.Vars {
 		spl := &t.Sparkline.Lines[i]
 
-		max := formatMax(service.Max(name))
+		max := "MAX" // FIXME: formatMax(service.Max(name))
 		spl.Title = fmt.Sprintf("%s: %v%s", name.Long(), service.Value(name), max)
 		spl.TitleColor = colorByKind(name.Kind())
 		spl.LineColor = colorByKind(name.Kind())
@@ -102,7 +102,7 @@ func (t *TermUISingle) Update(data UIData) {
 		if name.Kind() == KindString {
 			continue
 		}
-		spl.Data = service.Values(name)
+		spl.Data = []int{} // FIXME: service.Values(name)
 	}
 
 	t.Relayout()
