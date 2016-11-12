@@ -46,10 +46,10 @@ func (v *Number) String() string {
 	return fmt.Sprintf("%.02f", v.val)
 }
 func (v *Number) Set(j *jason.Value) {
-	if n, err := j.Int64(); err == nil {
-		v.val = float64(n)
-	} else if n, err := j.Float64(); err == nil {
+	if n, err := j.Float64(); err == nil {
 		v.val = n
+	} else if n, err := j.Int64(); err == nil {
+		v.val = float64(n)
 	} else {
 		v.val = 0
 	}
@@ -210,6 +210,9 @@ func roundDuration(d time.Duration) time.Duration {
 	}
 	if d < time.Millisecond {
 		r = time.Microsecond
+	}
+	if d < time.Microsecond {
+		r = time.Nanosecond
 	}
 	if r <= 0 {
 		return d
