@@ -25,6 +25,7 @@ const (
 	KindMemory
 	KindDuration
 	KindString
+	KindGCPauses
 )
 
 // Var represents arbitrary value for variable.
@@ -39,6 +40,26 @@ type Var interface {
 type IntVar interface {
 	Var
 	Value() int
+}
+
+// NewVar inits new Var object with the given name.
+func NewVar(name VarName) Var {
+	kind := name.Kind()
+
+	switch kind {
+	case KindDefault:
+		return &Number{}
+	case KindMemory:
+		return &Memory{}
+	case KindDuration:
+		return &Duration{}
+	case KindString:
+		return &String{}
+	case KindGCPauses:
+		return &GCPauses{}
+	default:
+		return &Number{}
+	}
 }
 
 // Number is a type for numeric values, obtained from JSON.
@@ -131,25 +152,35 @@ func (v *String) Set(j *jason.Value) {
 	}
 }
 
-// TODO: add boolean, timestamp, gcpauses, gcendtimes types
+// GCPauses represents GC pauses data.
+//
+// It uses memstat.PauseNS circular buffer, but lacks
+// NumGC information, so we don't know what the start
+// and the end. It's enough for most stats, though.
+type GCPauses struct {
+	pauses [256]uint64
+}
 
-// NewVar inits new Var object with the given name.
-func NewVar(name VarName) Var {
-	kind := name.Kind()
-
-	switch kind {
-	case KindDefault:
-		return &Number{}
-	case KindMemory:
-		return &Memory{}
-	case KindDuration:
-		return &Duration{}
-	case KindString:
-		return &String{}
-	default:
-		return &Number{}
+func (v *GCPauses) Kind() VarKind  { return KindGCPauses }
+func (v *GCPauses) String() string { return "" }
+func (v *GCPauses) Set(j *jason.Value) {
+	v.pauses = [256]uint64{}
+	if arr, err := j.Array(); err == nil {
+		for i := 0; i < len(arr); i++ {
+			p, _ := arr[i].Int64()
+			v.pauses[i] = uint64(p)
+		}
 	}
 }
+func (v *GCPauses) Histogram(bins int) *Histogram {
+	hist := NewHistogram(bins)
+	for i := 0; i < 256; i++ {
+		hist.Add(v.pauses[i])
+	}
+	return hist
+}
+
+// TODO: add boolean, timestamp, gcpauses, gcendtimes types
 
 // ToSlice converts "dot-separated" notation into the "slice of strings".
 //
@@ -184,8 +215,13 @@ func (v VarName) Long() string {
 	return string(v)[start:]
 }
 
-// Kind returns kind of variable, based on it's name modifiers ("mem:")
+// Kind returns kind of variable, based on it's name
+// modifiers ("mem:") or full names for special cases.
 func (v VarName) Kind() VarKind {
+	if v.Long() == "memstats.PauseNs" {
+		return KindGCPauses
+	}
+
 	start := strings.IndexRune(string(v), ':')
 	if start == -1 {
 		return KindDefault
