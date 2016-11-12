@@ -93,6 +93,21 @@ func TestVarName(t *testing.T) {
 	}
 }
 
+func TestVarNew(t *testing.T) {
+	v := NewVar(VarName("mem:field.Subfield"))
+	if v.Kind() != KindMemory {
+		t.Fatalf("Expect Memory, got %v", v.Kind())
+	}
+	v = NewVar(VarName("str:field.Subfield"))
+	if v.Kind() != KindString {
+		t.Fatalf("Expect String, got %v", v.Kind())
+	}
+	v = NewVar(VarName("duration:field.Subfield"))
+	if v.Kind() != KindDuration {
+		t.Fatalf("Expect Duration, got %v", v.Kind())
+	}
+}
+
 func str2val(t *testing.T, s string) *jason.Value {
 	val, err := jason.NewValueFromReader(strings.NewReader(s))
 	if err != nil {
@@ -116,6 +131,7 @@ func TestVarNumber(t *testing.T) {
 	testNumber(t, v, "142", 142, "142.00")
 	testNumber(t, v, "13.24", 13, "13.24")
 	testNumber(t, v, "true", 0, "0.00")
+	testNumber(t, v, "\"success\"", 0, "0.00")
 }
 
 func TestVarMemory(t *testing.T) {
@@ -168,6 +184,10 @@ func TestVarString(t *testing.T) {
 	v := &String{}
 	v.Set(str2val(t, "\"success\""))
 	if want := "success"; v.String() != want {
+		t.Fatalf("Expect value to be %s, got %s", want, v.String())
+	}
+	v.Set(str2val(t, "123"))
+	if want := "N/A"; v.String() != want {
 		t.Fatalf("Expect value to be %s, got %s", want, v.String())
 	}
 }

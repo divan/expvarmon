@@ -20,6 +20,13 @@ type VarName string
 // VarKind specifies special kinds of values, affects formatting.
 type VarKind int
 
+const (
+	KindDefault VarKind = iota
+	KindMemory
+	KindDuration
+	KindString
+)
+
 // Var represents arbitrary value for variable.
 type Var interface {
 	Kind() VarKind
@@ -143,13 +150,6 @@ func NewVar(name VarName) Var {
 		return &Number{}
 	}
 }
-
-const (
-	KindDefault VarKind = iota
-	KindMemory
-	KindDuration
-	KindString
-)
 
 // ToSlice converts "dot-separated" notation into the "slice of strings".
 //
