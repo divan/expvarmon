@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/antonholmquist/jason"
 	"github.com/pyk/byten"
 )
 
@@ -19,15 +20,167 @@ type VarName string
 // VarKind specifies special kinds of values, affects formatting.
 type VarKind int
 
-// VarValue represents arbitrary value for variable.
-type VarValue interface{}
-
 const (
 	KindDefault VarKind = iota
 	KindMemory
 	KindDuration
 	KindString
+	KindGCPauses
 )
+
+// Var represents arbitrary value for variable.
+type Var interface {
+	Kind() VarKind
+	String() string
+	Set(*jason.Value)
+}
+
+// IntVar represents variable which value can be represented as integer,
+// and suitable for displaying with sparklines.
+type IntVar interface {
+	Var
+	Value() int
+}
+
+// NewVar inits new Var object with the given name.
+func NewVar(name VarName) Var {
+	kind := name.Kind()
+
+	switch kind {
+	case KindDefault:
+		return &Number{}
+	case KindMemory:
+		return &Memory{}
+	case KindDuration:
+		return &Duration{}
+	case KindString:
+		return &String{}
+	case KindGCPauses:
+		return &GCPauses{}
+	default:
+		return &Number{}
+	}
+}
+
+// Number is a type for numeric values, obtained from JSON.
+// In JSON it's always float64, so there is no straightforward way
+// to separate float from int, so let's keep everything as float.
+type Number struct {
+	val float64
+}
+
+func (v *Number) Kind() VarKind { return KindDefault }
+func (v *Number) String() string {
+	return fmt.Sprintf("%.02f", v.val)
+}
+func (v *Number) Set(j *jason.Value) {
+	if n, err := j.Float64(); err == nil {
+		v.val = n
+	} else if n, err := j.Int64(); err == nil {
+		v.val = float64(n)
+	} else {
+		v.val = 0
+	}
+}
+
+// Value implements IntVar for Number type.
+func (v *Number) Value() int {
+	return int(v.val)
+}
+
+// Memory represents memory information in bytes.
+type Memory struct {
+	bytes int64
+}
+
+func (v *Memory) Kind() VarKind { return KindMemory }
+func (v *Memory) String() string {
+	return fmt.Sprintf("%s", byten.Size(v.bytes))
+}
+func (v *Memory) Set(j *jason.Value) {
+	if n, err := j.Int64(); err == nil {
+		v.bytes = n
+	} else {
+		v.bytes = 0
+	}
+}
+
+// Value implements IntVar for Memory type.
+func (v *Memory) Value() int {
+	// TODO: check for possible overflows
+	return int(v.bytes)
+}
+
+// Duration represents duration data (in ns)
+type Duration struct {
+	dur time.Duration
+}
+
+func (v *Duration) Kind() VarKind { return KindDuration }
+func (v *Duration) String() string {
+	return fmt.Sprintf("%s", roundDuration(time.Duration(v.dur)))
+}
+
+func (v *Duration) Set(j *jason.Value) {
+	if n, err := j.Int64(); err == nil {
+		v.dur = time.Duration(n)
+	} else if n, err := j.Float64(); err == nil {
+		v.dur = time.Duration(int64(n))
+	} else {
+		v.dur = 0
+	}
+}
+
+// Value implements IntVar for Duration type.
+func (v *Duration) Value() int {
+	// TODO: check for possible overflows
+	return int(v.dur)
+}
+
+// Strings represents string data.
+type String struct {
+	str string
+}
+
+func (v *String) Kind() VarKind  { return KindString }
+func (v *String) String() string { return v.str }
+func (v *String) Set(j *jason.Value) {
+	if n, err := j.String(); err == nil {
+		v.str = n
+	} else {
+		v.str = "N/A"
+	}
+}
+
+// GCPauses represents GC pauses data.
+//
+// It uses memstat.PauseNS circular buffer, but lacks
+// NumGC information, so we don't know what the start
+// and the end. It's enough for most stats, though.
+type GCPauses struct {
+	pauses [256]uint64
+}
+
+func (v *GCPauses) Kind() VarKind  { return KindGCPauses }
+func (v *GCPauses) String() string { return "" }
+func (v *GCPauses) Set(j *jason.Value) {
+	v.pauses = [256]uint64{}
+	if arr, err := j.Array(); err == nil {
+		for i := 0; i < len(arr); i++ {
+			p, _ := arr[i].Int64()
+			v.pauses[i] = uint64(p)
+		}
+	}
+}
+func (v *GCPauses) Histogram(bins int) *Histogram {
+	hist := NewHistogram(bins)
+	for i := 0; i < 256; i++ {
+		hist.Add(v.pauses[i])
+	}
+	return hist
+}
+
+// TODO: add boolean, timestamp, gcpauses, gcendtimes types
 
 // ToSlice converts "dot-separated" notation into the "slice of strings".
 //
@@ -62,8 +215,13 @@ func (v VarName) Long() string {
 	return string(v)[start:]
 }
 
-// Kind returns kind of variable, based on it's name modifiers ("mem:")
+// Kind returns kind of variable, based on it's name
+// modifiers ("mem:") or full names for special cases.
 func (v VarName) Kind() VarKind {
+	if v.Long() == "memstats.PauseNs" {
+		return KindGCPauses
+	}
+
 	start := strings.IndexRune(string(v), ':')
 	if start == -1 {
 		return KindDefault
@@ -80,31 +238,6 @@ func (v VarName) Kind() VarKind {
 	return KindDefault
 }
 
-// Format returns human-readable var value representation.
-func Format(v VarValue, kind VarKind) string {
-	switch kind {
-	case KindMemory:
-		if _, ok := v.(int64); !ok {
-			break
-		}
-		return fmt.Sprintf("%s", byten.Size(v.(int64)))
-	case KindDuration:
-		if _, ok := v.(float64); ok {
-			return fmt.Sprintf("%s", roundDuration(time.Duration(v.(float64))))
-		}
-		if _, ok := v.(int64); !ok {
-			break
-		}
-		return fmt.Sprintf("%s", roundDuration(time.Duration(v.(int64))))
-	}
-
-	if f, ok := v.(float64); ok {
-		return fmt.Sprintf("%.2f", f)
-	}
-
-	return fmt.Sprintf("%v", v)
-}
-
 // roundDuration removes unneeded precision from the String() output for time.Duration.
 func roundDuration(d time.Duration) time.Duration {
 	r := time.Second
@@ -113,6 +246,9 @@ func roundDuration(d time.Duration) time.Duration {
 	}
 	if d < time.Millisecond {
 		r = time.Microsecond
+	}
+	if d < time.Microsecond {
+		r = time.Nanosecond
 	}
 	if r <= 0 {
 		return d

@@ -8,9 +8,8 @@ const DefaultSize = 1200
 
 // Stack is a limited FIFO for holding sparkline values.
 type Stack struct {
-	Values []VarValue
-	Len    int
-	Max    VarValue
+	values []int
+	len    int
 }
 
 // NewStack inits new Stack with default size limit.
@@ -21,85 +20,26 @@ func NewStack() *Stack {
 // NewStackWithSize inits new Stack with size limit.
 func NewStackWithSize(size int) *Stack {
 	return &Stack{
-		Values: make([]VarValue, size),
-		Len:    size,
+		values: make([]int, size),
+		len:    size,
 	}
 }
 
 // Push inserts data to stack, preserving constant length.
-func (s *Stack) Push(val VarValue) {
-	s.Values = append(s.Values, val)
-	if len(s.Values) > s.Len {
-		s.Values = s.Values[1:]
-	}
-
-	if s.Max == nil {
-		s.Max = val
-		return
-	}
-
-	switch val.(type) {
-	case int64:
-		switch s.Max.(type) {
-		case int64:
-			if val.(int64) > s.Max.(int64) {
-				s.Max = val
-			}
-		case float64:
-			if float64(val.(int64)) > s.Max.(float64) {
-				s.Max = val
-			}
-		}
-	case float64:
-		switch s.Max.(type) {
-		case int64:
-			if val.(float64) > float64(s.Max.(int64)) {
-				s.Max = val
-			}
-		case float64:
-			if val.(float64) > s.Max.(float64) {
-				s.Max = val
-			}
-		}
+func (s *Stack) Push(v IntVar) {
+	val := v.Value()
+	s.values = append(s.values, val)
+	if len(s.values) > s.len {
+		// TODO: check if underlying array is growing constantly
+		s.values = s.values[1:]
 	}
 }
 
-// Front returns front value.
-func (s *Stack) Front() VarValue {
-	if len(s.Values) == 0 {
-		return nil
-	}
-	return s.Values[len(s.Values)-1]
-}
-
-// IntValues returns stack values explicitly casted to int.
+// Values returns stack values explicitly casted to int.
 //
 // Main case is to use with termui.Sparklines.
-func (s *Stack) IntValues() []int {
-	ret := make([]int, s.Len)
-	for i, v := range s.Values {
-		n, ok := v.(int64)
-		if ok {
-			ret[i] = int(n)
-			continue
-		}
-
-		f, ok := v.(float64)
-		if ok {
-			// 12.34 (float) -> 1234 (int)
-			ret[i] = int(f * 100)
-			continue
-		}
-
-		b, ok := v.(bool)
-		if ok {
-			// false => 0, true = 1
-			if b {
-				ret[i] = 1
-			} else {
-				ret[i] = 0
-			}
-		}
-	}
-	return ret
+func (s *Stack) Values() []int {
+	return s.values
 }
+
+// TODO: implement trim and resize

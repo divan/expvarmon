@@ -104,17 +104,21 @@ func (t *TermUISingle) Update(data UIData) {
 
 	// Sparklines
 	for i, name := range data.Vars {
+		v, ok := service.Vars[name].(IntVar)
+		if !ok {
+			continue
+		}
+		data.SparklineData[0].Stacks[name].Push(v)
+		data.SparklineData[0].Stats[name].Update(v)
+
 		spl := &t.Sparkline.Lines[i]
 
-		max := formatMax(service.Max(name))
-		spl.Title = fmt.Sprintf("%s: %v%s", name.Long(), service.Value(name), max)
+		max := data.SparklineData[i].Stats[name].Max().String()
+		spl.Title = fmt.Sprintf("%s: %v (max: %v)", name.Long(), service.Value(name), max)
 		spl.TitleColor = colorByKind(name.Kind())
 		spl.LineColor = colorByKind(name.Kind())
 
-		if name.Kind() == KindString {
-			continue
-		}
-		spl.Data = service.Values(name)
+		spl.Data = data.SparklineData[0].Stacks[name].Values()
 	}
 
 	// BarChart
