@@ -236,6 +236,10 @@ func (v *GCIntervals) Set(j *jason.Value) {
 	if arr, err := j.Array(); err == nil {
 		for i := 1; i < len(arr); i++ {
 			p, _ := arr[i].Int64()
+			if p == 0 {
+				prev = p
+				break
+			}
 
 			v.intervals[i] = duration(p, prev)
 			prev = p
@@ -243,7 +247,9 @@ func (v *GCIntervals) Set(j *jason.Value) {
 
 		// process last and fist elems
 		p, _ := arr[0].Int64()
-		v.intervals[0] = duration(p, prev)
+		if p != 0 && prev != 0 {
+			v.intervals[0] = duration(p, prev)
+		}
 	}
 }
 func (v *GCIntervals) Histogram(bins int) *Histogram {
@@ -329,6 +335,11 @@ func (v VarName) Kind() VarKind {
 		return KindString
 	}
 	return KindDefault
+}
+
+// rate calculates rate per seconds for the duration.
+func rate(d time.Duration, precision time.Duration) float64 {
+	return float64(precision) / float64(d)
 }
 
 // round removes unneeded precision from the String() output for time.Duration.
