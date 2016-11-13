@@ -130,10 +130,10 @@ func TestVarNumber(t *testing.T) {
 		}
 	}
 
-	testNumber(t, v, "142", 142, "142.00")
+	testNumber(t, v, "142", 142, "142")
 	testNumber(t, v, "13.24", 13, "13.24")
-	testNumber(t, v, "true", 0, "0.00")
-	testNumber(t, v, "\"success\"", 0, "0.00")
+	testNumber(t, v, "true", 0, "0")
+	testNumber(t, v, "\"success\"", 0, "0")
 }
 
 func TestVarMemory(t *testing.T) {

@@ -7,7 +7,7 @@ func TestStack(t *testing.T) {
 	s := NewStackWithSize(size)
 
 	for i := 0; i < size+5; i++ {
-		s.Push(&Number{float64(i)})
+		s.Push(&Number{float64(i), false})
 		l := len(s.values)
 
 		if l < size {
