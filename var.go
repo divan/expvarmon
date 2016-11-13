@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -74,6 +75,11 @@ type Number struct {
 
 func (v *Number) Kind() VarKind { return KindDefault }
 func (v *Number) String() string {
+	// if fraction part is zero, assume int's integer
+	if _, frac := math.Modf(v.val); frac == 0 {
+		return fmt.Sprintf("%.0f", v.val)
+	}
+	// else, return as float
 	return fmt.Sprintf("%.02f", v.val)
 }
 func (v *Number) Set(j *jason.Value) {
@@ -178,10 +184,24 @@ func (v *String) Set(j *jason.Value) {
 // and the end. It's enough for most stats, though.
 type GCPauses struct {
 	pauses [256]uint64
+	hist   *Histogram
 }
 
-func (v *GCPauses) Kind() VarKind  { return KindGCPauses }
-func (v *GCPauses) String() string { return "" }
+func (v *GCPauses) Kind() VarKind { return KindGCPauses }
+func (v *GCPauses) String() string {
+	if v.hist == nil {
+		return ""
+	}
+	// return Mean by default
+	return fmt.Sprintf("%v", round(time.Duration(v.hist.Mean())))
+}
+func (v *GCPauses) Value() int {
+	if v.hist == nil {
+		return 0
+	}
+	// return Mean by default
+	return int(v.hist.Mean())
+}
 func (v *GCPauses) Set(j *jason.Value) {
 	v.pauses = [256]uint64{}
 	if j == nil {
@@ -193,6 +213,11 @@ func (v *GCPauses) Set(j *jason.Value) {
 			v.pauses[i] = uint64(p)
 		}
 	}
+
+	// we need histogram object
+	// to access mean() method
+	// number of bins doesn't matter here
+	v.hist = v.Histogram(1)
 }
 func (v *GCPauses) Histogram(bins int) *Histogram {
 	hist := NewHistogram(bins)
@@ -204,7 +229,8 @@ func (v *GCPauses) Histogram(bins int) *Histogram {
 			hist.Add(v.pauses[i])
 		}
 	}
-	return hist
+	v.hist = hist
+	return v.hist
 }
 
 // GCIntervals represents GC pauses intervals.
@@ -213,10 +239,24 @@ func (v *GCPauses) Histogram(bins int) *Histogram {
 // timestamps.
 type GCIntervals struct {
 	intervals [256]uint64
+	hist      *Histogram
 }
 
-func (v *GCIntervals) Kind() VarKind  { return KindGCIntervals }
-func (v *GCIntervals) String() string { return "" }
+func (v *GCIntervals) Kind() VarKind { return KindGCIntervals }
+func (v *GCIntervals) String() string {
+	if v.hist == nil {
+		return ""
+	}
+	// return Mean by default
+	return fmt.Sprintf("%v", round(time.Duration(v.hist.Mean())))
+}
+func (v *GCIntervals) Value() int {
+	if v.hist == nil {
+		return 0
+	}
+	// return Mean by default
+	return int(v.hist.Mean())
+}
 func (v *GCIntervals) Set(j *jason.Value) {
 	v.intervals = [256]uint64{}
 	if j == nil {
@@ -234,23 +274,25 @@ func (v *GCIntervals) Set(j *jason.Value) {
 	}
 	var prev int64
 	if arr, err := j.Array(); err == nil {
+		// process first elem
+		p, _ := arr[0].Int64()
+		plast, _ := arr[255].Int64()
+		v.intervals[0] = duration(p, plast)
+		prev = p
+
 		for i := 1; i < len(arr); i++ {
 			p, _ := arr[i].Int64()
 			if p == 0 {
-				prev = p
 				break
 			}
-
 			v.intervals[i] = duration(p, prev)
 			prev = p
 		}
-
-		// process last and fist elems
-		p, _ := arr[0].Int64()
-		if p != 0 && prev != 0 {
-			v.intervals[0] = duration(p, prev)
-		}
 	}
+
+	// the same as for GCPauses, we need it for mean()
+	// and number of bins doesn't matter here
+	v.hist = v.Histogram(1)
 }
 func (v *GCIntervals) Histogram(bins int) *Histogram {
 	hist := NewHistogram(bins)
@@ -269,10 +311,11 @@ func (v *GCIntervals) Histogram(bins int) *Histogram {
 		// we ignore zeros, since
 		// its never the case, but
 		// we have zeros on the very beginning
-		if v.intervals[i] > 0 && v.intervals[i] != max {
+		if v.intervals[i] > 0 && v.intervals[i] < max {
 			hist.Add(v.intervals[i])
 		}
 	}
+	v.hist = hist
 	return hist
 }
 
