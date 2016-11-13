@@ -9,7 +9,9 @@ type UIData struct {
 	LastTimestamp time.Time
 
 	SparklineData []*SparklineData
-	HasBarchart   bool
+
+	HasGCPauses bool
+	HasGCTimes  bool
 }
 
 // SparklineData holds additional data needed for sparklines.
@@ -53,6 +55,7 @@ func NewUIData(vars []VarName, services []*Service) *UIData {
 		Vars:          vars,
 		SparklineData: sp,
 
-		HasBarchart: hasGCPauses(vars),
+		HasGCPauses: hasGCPauses(vars),
+		HasGCTimes:  true,
 	}
 }

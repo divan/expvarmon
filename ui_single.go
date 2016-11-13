@@ -15,6 +15,9 @@ type TermUISingle struct {
 	Sparkline  *termui.Sparklines
 	Pars       []*termui.Par
 	BarChart   *termui.BarChart
+	BarChart2  *termui.BarChart
+
+	bins int // histograms' bins count
 }
 
 // Init creates widgets, sets sizes and labels.
@@ -82,6 +85,15 @@ func (t *TermUISingle) Init(data UIData) error {
 		return bc
 	}()
 
+	t.BarChart2 = func() *termui.BarChart {
+		bc := termui.NewBarChart()
+		bc.Border.Label = "Bar Chart"
+		bc.TextColor = termui.ColorGreen
+		bc.BarColor = termui.ColorGreen
+		bc.NumColor = termui.ColorBlack
+		return bc
+	}()
+
 	t.Relayout()
 
 	return nil
@@ -120,7 +132,7 @@ func (t *TermUISingle) Update(data UIData) {
 	}
 
 	// BarChart
-	if data.HasBarchart {
+	if data.HasGCPauses {
 		var gcpauses *GCPauses
 		for _, v := range service.Vars {
 			if v.Kind() == KindGCPauses {
@@ -128,7 +140,7 @@ func (t *TermUISingle) Update(data UIData) {
 				break
 			}
 		}
-		hist := gcpauses.Histogram(20)
+		hist := gcpauses.Histogram(t.bins)
 		values, counts := hist.BarchartData()
 		vals := make([]int, 0, len(counts))
 		labels := make([]string, 0, len(counts))
@@ -140,15 +152,21 @@ func (t *TermUISingle) Update(data UIData) {
 		t.BarChart.Data = vals
 		t.BarChart.DataLabels = labels
 		t.BarChart.Border.Label = "GC Pauses (last 256)"
-		t.BarChart.BarWidth = 7
+
+		t.BarChart2.Data = vals
+		t.BarChart2.DataLabels = labels
+		t.BarChart2.Border.Label = "GC Pauses (last 256)"
 	}
 
 	t.Relayout()
 
 	var widgets []termui.Bufferer
 	widgets = append(widgets, t.Title, t.Status, t.Sparkline)
-	if data.HasBarchart {
+	if data.HasGCPauses {
 		widgets = append(widgets, t.BarChart)
+	}
+	if data.HasGCTimes {
+		widgets = append(widgets, t.BarChart2)
 	}
 	for _, par := range t.Pars {
 		widgets = append(widgets, par)
@@ -204,15 +222,51 @@ func (t *TermUISingle) Relayout() {
 	t.Sparkline.Y = th - h
 
 	// Fourth row: Barchart
-	t.BarChart.Width = tw
+	bins, binWidth := recalcBins(tw / 2)
+	t.bins = bins
+
+	t.BarChart.Width = tw / 2
 	t.BarChart.Height = h - calcHeight
 	t.BarChart.Y = th - t.BarChart.Height
+	t.BarChart.BarWidth = binWidth
+
+	t.BarChart2.Width = tw / 2
+	t.BarChart2.X = tw / 2
+	t.BarChart2.Height = h - calcHeight
+	t.BarChart2.Y = th - t.BarChart.Height
+	t.BarChart2.BarWidth = binWidth
 }
 
-func formatMax(max interface{}) string {
-	var str string
-	if max != nil {
-		str = fmt.Sprintf(" (max: %v)", max)
+// recalcBins attempts to select optimal value for the number
+// of bins for histograms.
+//
+// Optimal range is 10-30, but we must try to keep bins' width
+// no less then 5 to fit the labels ("123ms"). Hence some heuristics.
+//
+// Should be called on resize or creation.
+func recalcBins(tw int) (int, int) {
+	var (
+		bins, w  int
+		minWidth = 5
+		minBins  = 10
+		maxBins  = 30
+	)
+	w = minWidth
+
+	tryWidth := func(w int) int {
+		return tw / w
 	}
-	return str
+
+	bins = tryWidth(w)
+	for bins > maxBins {
+		w++
+		bins = tryWidth(w)
+	}
+
+	for bins < minBins && w > minWidth {
+		w--
+		bins = tryWidth(w)
+	}
+
+	return bins, w
 }

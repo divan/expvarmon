@@ -200,7 +200,7 @@ func TestVarGCPauses(t *testing.T) {
 		t.Fatalf("Expect len of values to be 20, got %v", len(values))
 	}
 	// TODO: check if it's true mean :)
-	if want, mean := 67383.87109375, hist.Mean(); mean != want {
+	if want, mean := 112746.86928104576, hist.Mean(); mean != want {
 		t.Fatalf("Expect mean to be be %v, got %v", want, mean)
 	}
 }
