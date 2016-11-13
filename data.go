@@ -10,8 +10,8 @@ type UIData struct {
 
 	SparklineData []*SparklineData
 
-	HasGCPauses bool
-	HasGCTimes  bool
+	HasGCPauses    bool
+	HasGCIntervals bool
 }
 
 // SparklineData holds additional data needed for sparklines.
@@ -49,13 +49,21 @@ func NewUIData(vars []VarName, services []*Service) *UIData {
 		}
 		return false
 	}
+	hasGCIntervals := func(vars []VarName) bool {
+		for _, v := range vars {
+			if v.Kind() == KindGCIntervals {
+				return true
+			}
+		}
+		return false
+	}
 
 	return &UIData{
 		Services:      services,
 		Vars:          vars,
 		SparklineData: sp,
 
-		HasGCPauses: hasGCPauses(vars),
-		HasGCTimes:  true,
+		HasGCPauses:    hasGCPauses(vars),
+		HasGCIntervals: hasGCIntervals(vars),
 	}
 }

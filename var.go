@@ -26,6 +26,7 @@ const (
 	KindDuration
 	KindString
 	KindGCPauses
+	KindGCIntervals
 )
 
 // Var represents arbitrary value for variable.
@@ -57,6 +58,8 @@ func NewVar(name VarName) Var {
 		return &String{}
 	case KindGCPauses:
 		return &GCPauses{}
+	case KindGCIntervals:
+		return &GCIntervals{}
 	default:
 		return &Number{}
 	}
@@ -204,7 +207,70 @@ func (v *GCPauses) Histogram(bins int) *Histogram {
 	return hist
 }
 
-// TODO: add boolean, timestamp, gcpauses, gcendtimes types
+// GCIntervals represents GC pauses intervals.
+//
+// It uses memstat.PauseEnd circular buffer w/
+// timestamps.
+type GCIntervals struct {
+	intervals [256]uint64
+}
+
+func (v *GCIntervals) Kind() VarKind  { return KindGCIntervals }
+func (v *GCIntervals) String() string { return "" }
+func (v *GCIntervals) Set(j *jason.Value) {
+	v.intervals = [256]uint64{}
+	if j == nil {
+		return
+	}
+	// as original array contains UNIX timestamps,
+	// we want to calculate diffs to previous values (interval)
+	// and work with them
+	duration := func(a, b int64) uint64 {
+		dur := int64(a - b)
+		if dur < 0 {
+			dur = -dur
+		}
+		return uint64(dur)
+	}
+	var prev int64
+	if arr, err := j.Array(); err == nil {
+		for i := 1; i < len(arr); i++ {
+			p, _ := arr[i].Int64()
+
+			v.intervals[i] = duration(p, prev)
+			prev = p
+		}
+
+		// process last and fist elems
+		p, _ := arr[0].Int64()
+		v.intervals[0] = duration(p, prev)
+	}
+}
+func (v *GCIntervals) Histogram(bins int) *Histogram {
+	hist := NewHistogram(bins)
+
+	// we need to skip maximum value here
+	// because it's always a diff between last and fist
+	// elem in cicrular buffer (we don't know NumGC)
+	var max uint64
+	for i := 0; i < 256; i++ {
+		if v.intervals[i] > max {
+			max = v.intervals[i]
+		}
+	}
+
+	for i := 0; i < 256; i++ {
+		// we ignore zeros, since
+		// its never the case, but
+		// we have zeros on the very beginning
+		if v.intervals[i] > 0 && v.intervals[i] != max {
+			hist.Add(v.intervals[i])
+		}
+	}
+	return hist
+}
+
+// TODO: add boolean, timestamp, types
 
 // ToSlice converts "dot-separated" notation into the "slice of strings".
 //
@@ -244,6 +310,9 @@ func (v VarName) Long() string {
 func (v VarName) Kind() VarKind {
 	if v.Long() == "memstats.PauseNs" {
 		return KindGCPauses
+	}
+	if v.Long() == "memstats.PauseEnd" {
+		return KindGCIntervals
 	}
 
 	start := strings.IndexRune(string(v), ':')

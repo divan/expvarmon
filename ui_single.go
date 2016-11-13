@@ -76,23 +76,27 @@ func (t *TermUISingle) Init(data UIData) error {
 		return s
 	}()
 
-	t.BarChart = func() *termui.BarChart {
-		bc := termui.NewBarChart()
-		bc.Border.Label = "Bar Chart"
-		bc.TextColor = termui.ColorGreen
-		bc.BarColor = termui.ColorGreen
-		bc.NumColor = termui.ColorBlack
-		return bc
-	}()
+	if data.HasGCPauses {
+		t.BarChart = func() *termui.BarChart {
+			bc := termui.NewBarChart()
+			bc.Border.Label = "Bar Chart"
+			bc.TextColor = termui.ColorGreen
+			bc.BarColor = termui.ColorGreen
+			bc.NumColor = termui.ColorBlack
+			return bc
+		}()
+	}
 
-	t.BarChart2 = func() *termui.BarChart {
-		bc := termui.NewBarChart()
-		bc.Border.Label = "Bar Chart"
-		bc.TextColor = termui.ColorGreen
-		bc.BarColor = termui.ColorGreen
-		bc.NumColor = termui.ColorBlack
-		return bc
-	}()
+	if data.HasGCIntervals {
+		t.BarChart2 = func() *termui.BarChart {
+			bc := termui.NewBarChart()
+			bc.Border.Label = "Bar Chart"
+			bc.TextColor = termui.ColorGreen
+			bc.BarColor = termui.ColorGreen
+			bc.NumColor = termui.ColorBlack
+			return bc
+		}()
+	}
 
 	t.Relayout()
 
@@ -153,9 +157,28 @@ func (t *TermUISingle) Update(data UIData) {
 		t.BarChart.DataLabels = labels
 		t.BarChart.Border.Label = "GC Pauses (last 256)"
 
+	}
+
+	if data.HasGCIntervals {
+		var gcintervals *GCIntervals
+		for _, v := range service.Vars {
+			if v.Kind() == KindGCIntervals {
+				gcintervals = v.(*GCIntervals)
+				break
+			}
+		}
+		hist := gcintervals.Histogram(t.bins)
+		values, counts := hist.BarchartData()
+		vals := make([]int, 0, len(counts))
+		labels := make([]string, 0, len(counts))
+		for i := 0; i < len(counts); i++ {
+			vals = append(vals, int(counts[i]))
+			d := roundDuration(time.Duration(values[i]))
+			labels = append(labels, d.String())
+		}
 		t.BarChart2.Data = vals
 		t.BarChart2.DataLabels = labels
-		t.BarChart2.Border.Label = "GC Pauses (last 256)"
+		t.BarChart2.Border.Label = "Intervals between GC (last 256)"
 	}
 
 	t.Relayout()
@@ -165,7 +188,7 @@ func (t *TermUISingle) Update(data UIData) {
 	if data.HasGCPauses {
 		widgets = append(widgets, t.BarChart)
 	}
-	if data.HasGCTimes {
+	if data.HasGCIntervals {
 		widgets = append(widgets, t.BarChart2)
 	}
 	for _, par := range t.Pars {
@@ -221,20 +244,35 @@ func (t *TermUISingle) Relayout() {
 	t.Sparkline.Height = calcHeight
 	t.Sparkline.Y = th - h
 
-	// Fourth row: Barchart
-	bins, binWidth := recalcBins(tw / 2)
-	t.bins = bins
+	// Fourth row: Barcharts
+	var barchartWidth, charts int
+	if t.BarChart != nil {
+		charts++
+	}
+	if t.BarChart2 != nil {
+		charts++
+	}
 
-	t.BarChart.Width = tw / 2
-	t.BarChart.Height = h - calcHeight
-	t.BarChart.Y = th - t.BarChart.Height
-	t.BarChart.BarWidth = binWidth
+	if charts > 0 {
+		barchartWidth = tw / charts
+		bins, binWidth := recalcBins(barchartWidth)
+		t.bins = bins
 
-	t.BarChart2.Width = tw / 2
-	t.BarChart2.X = tw / 2
-	t.BarChart2.Height = h - calcHeight
-	t.BarChart2.Y = th - t.BarChart.Height
-	t.BarChart2.BarWidth = binWidth
+		if t.BarChart != nil {
+			t.BarChart.Width = barchartWidth
+			t.BarChart.Height = h - calcHeight
+			t.BarChart.Y = th - t.BarChart.Height
+			t.BarChart.BarWidth = binWidth
+		}
+
+		if t.BarChart2 != nil {
+			t.BarChart2.Width = barchartWidth
+			t.BarChart2.X = 0 + barchartWidth
+			t.BarChart2.Height = h - calcHeight
+			t.BarChart2.Y = th - t.BarChart.Height
+			t.BarChart2.BarWidth = binWidth
+		}
+	}
 }
 
 // recalcBins attempts to select optimal value for the number
