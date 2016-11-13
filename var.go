@@ -35,6 +35,7 @@ type Var interface {
 	Kind() VarKind
 	String() string
 	Set(*jason.Value)
+	SetNA() // mark as N/A
 }
 
 // IntVar represents variable which value can be represented as integer,
@@ -71,10 +72,14 @@ func NewVar(name VarName) Var {
 // to separate float from int, so let's keep everything as float.
 type Number struct {
 	val float64
+	na  bool
 }
 
 func (v *Number) Kind() VarKind { return KindDefault }
 func (v *Number) String() string {
+	if v.na {
+		return "N/A"
+	}
 	// if fraction part is zero, assume int's integer
 	if _, frac := math.Modf(v.val); frac == 0 {
 		return fmt.Sprintf("%.0f", v.val)
@@ -83,10 +88,7 @@ func (v *Number) String() string {
 	return fmt.Sprintf("%.02f", v.val)
 }
 func (v *Number) Set(j *jason.Value) {
-	if j == nil {
-		v.val = 0
-		return
-	}
+	v.na = false
 	if n, err := j.Float64(); err == nil {
 		v.val = n
 	} else if n, err := j.Int64(); err == nil {
@@ -94,6 +96,10 @@ func (v *Number) Set(j *jason.Value) {
 	} else {
 		v.val = 0
 	}
+}
+func (v *Number) SetNA() {
+	v.na = true
+	v.val = 0
 }
 
 // Value implements IntVar for Number type.
@@ -104,17 +110,18 @@ func (v *Number) Value() int {
 // Memory represents memory information in bytes.
 type Memory struct {
 	bytes int64
+	na    bool
 }
 
 func (v *Memory) Kind() VarKind { return KindMemory }
 func (v *Memory) String() string {
+	if v.na {
+		return "N/A"
+	}
 	return fmt.Sprintf("%s", byten.Size(v.bytes))
 }
 func (v *Memory) Set(j *jason.Value) {
-	if j == nil {
-		v.bytes = 0
-		return
-	}
+	v.na = false
 	if n, err := j.Int64(); err == nil {
 		v.bytes = n
 	} else {
@@ -127,22 +134,27 @@ func (v *Memory) Value() int {
 	// TODO: check for possible overflows
 	return int(v.bytes)
 }
+func (v *Memory) SetNA() {
+	v.na = true
+	v.bytes = 0
+}
 
 // Duration represents duration data (in ns)
 type Duration struct {
 	dur time.Duration
+	na  bool
 }
 
 func (v *Duration) Kind() VarKind { return KindDuration }
 func (v *Duration) String() string {
+	if v.na {
+		return "N/A"
+	}
 	return fmt.Sprintf("%s", round(time.Duration(v.dur)))
 }
 
 func (v *Duration) Set(j *jason.Value) {
-	if j == nil {
-		v.dur = 0
-		return
-	}
+	v.na = false
 	if n, err := j.Int64(); err == nil {
 		v.dur = time.Duration(n)
 	} else if n, err := j.Float64(); err == nil {
@@ -157,6 +169,10 @@ func (v *Duration) Value() int {
 	// TODO: check for possible overflows
 	return int(v.dur)
 }
+func (v *Duration) SetNA() {
+	v.na = true
+	v.dur = 0
+}
 
 // Strings represents string data.
 type String struct {
@@ -166,15 +182,14 @@ type String struct {
 func (v *String) Kind() VarKind  { return KindString }
 func (v *String) String() string { return v.str }
 func (v *String) Set(j *jason.Value) {
-	if j == nil {
-		v.str = "N/A"
-		return
-	}
 	if n, err := j.String(); err == nil {
 		v.str = n
 	} else {
 		v.str = "N/A"
 	}
+}
+func (v *String) SetNA() {
+	v.str = "N/A"
 }
 
 // GCPauses represents GC pauses data.
@@ -185,12 +200,13 @@ func (v *String) Set(j *jason.Value) {
 type GCPauses struct {
 	pauses [256]uint64
 	hist   *Histogram
+	na     bool
 }
 
 func (v *GCPauses) Kind() VarKind { return KindGCPauses }
 func (v *GCPauses) String() string {
-	if v.hist == nil {
-		return ""
+	if v.na {
+		return "N/A"
 	}
 	// return Mean by default
 	return fmt.Sprintf("%v", round(time.Duration(v.hist.Mean())))
@@ -203,10 +219,8 @@ func (v *GCPauses) Value() int {
 	return int(v.hist.Mean())
 }
 func (v *GCPauses) Set(j *jason.Value) {
+	v.na = false
 	v.pauses = [256]uint64{}
-	if j == nil {
-		return
-	}
 	if arr, err := j.Array(); err == nil {
 		for i := 0; i < len(arr); i++ {
 			p, _ := arr[i].Int64()
@@ -232,6 +246,9 @@ func (v *GCPauses) Histogram(bins int) *Histogram {
 	v.hist = hist
 	return v.hist
 }
+func (v *GCPauses) SetNA() {
+	v.na = true
+}
 
 // GCIntervals represents GC pauses intervals.
 //
@@ -240,28 +257,27 @@ func (v *GCPauses) Histogram(bins int) *Histogram {
 type GCIntervals struct {
 	intervals [256]uint64
 	hist      *Histogram
+	na        bool
 }
 
 func (v *GCIntervals) Kind() VarKind { return KindGCIntervals }
 func (v *GCIntervals) String() string {
-	if v.hist == nil {
-		return ""
+	if v.na {
+		return "N/A"
 	}
 	// return Mean by default
 	return fmt.Sprintf("%v", round(time.Duration(v.hist.Mean())))
 }
 func (v *GCIntervals) Value() int {
-	if v.hist == nil {
+	if v.na {
 		return 0
 	}
 	// return Mean by default
 	return int(v.hist.Mean())
 }
 func (v *GCIntervals) Set(j *jason.Value) {
+	v.na = false
 	v.intervals = [256]uint64{}
-	if j == nil {
-		return
-	}
 	// as original array contains UNIX timestamps,
 	// we want to calculate diffs to previous values (interval)
 	// and work with them
@@ -317,6 +333,9 @@ func (v *GCIntervals) Histogram(bins int) *Histogram {
 	}
 	v.hist = hist
 	return hist
+}
+func (v *GCIntervals) SetNA() {
+	v.na = true
 }
 
 // TODO: add boolean, timestamp, types
