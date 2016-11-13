@@ -110,8 +110,8 @@ func (t *TermUISingle) Init(data UIData) error {
 		}()
 		t.GCIStats = func() *termui.Par {
 			p := termui.NewPar("")
-			p.Height = 4
-			p.Width = len("Max: 123ms (0.21/s, 1234/min)") // example
+			p.Height = 2
+			p.Width = len("Avg: 123ms (0.21/s, 1234/min)") // example
 			p.HasBorder = false
 			p.TextFgColor = termui.ColorGreen
 			return p
@@ -207,12 +207,10 @@ func (t *TermUISingle) Update(data UIData) {
 		t.GCIChart.Border.Label = "Intervals between GC (last 256)"
 
 		mean := time.Duration(hist.Mean())
-		p95 := time.Duration(hist.Quantile(0.95))
-		t.GCIStats.Text = fmt.Sprintf("Min: %v\nAvg: %v (%.2f/s, %.0f/min)\n95p: %v (%.2f/s, %.0f/min)\nMax: %v",
+		t.GCIStats.Text = fmt.Sprintf("Min/Max: %v/%v\nAvg: %v (%.2f/s, %.0f/min)",
 			round(time.Duration(hist.Min())),
-			round(mean), rate(mean, time.Second), rate(mean, time.Minute),
-			round(p95), rate(p95, time.Second), rate(p95, time.Minute),
 			round(time.Duration(hist.Max())),
+			round(mean), rate(mean, time.Second), rate(mean, time.Minute),
 		)
 	}
 
