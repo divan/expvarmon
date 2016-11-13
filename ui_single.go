@@ -147,7 +147,7 @@ func (t *TermUISingle) Update(data UIData) {
 
 		spl := &t.Sparkline.Lines[i]
 
-		max := data.SparklineData[0].Stats[name].Max().String()
+		max := data.SparklineData[0].Stats[name].Max()
 		spl.Title = fmt.Sprintf("%s: %v (max: %v)", name.Long(), service.Value(name), max)
 		spl.TitleColor = colorByKind(name.Kind())
 		spl.LineColor = colorByKind(name.Kind())

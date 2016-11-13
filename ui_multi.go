@@ -118,7 +118,7 @@ func (t *TermUI) Update(data UIData) {
 		if ok {
 			data.SparklineData[i].Stacks[name].Push(v)
 			data.SparklineData[i].Stats[name].Update(v)
-			max := data.SparklineData[i].Stats[name].Max().String()
+			max := data.SparklineData[i].Stats[name].Max()
 
 			t.Sparkline1.Lines[i].Title = fmt.Sprintf("%s (max: %s)", service.Name, max)
 			t.Sparkline1.Lines[i].Data = data.SparklineData[i].Stacks[name].Values()
@@ -133,7 +133,7 @@ func (t *TermUI) Update(data UIData) {
 		if ok {
 			data.SparklineData[i].Stacks[name].Push(v)
 			data.SparklineData[i].Stats[name].Update(v)
-			max := data.SparklineData[i].Stats[name].Max().String()
+			max := data.SparklineData[i].Stats[name].Max()
 
 			t.Sparkline2.Lines[i].Title = fmt.Sprintf("%s (max: %s)", service.Name, max)
 			t.Sparkline2.Lines[i].Data = data.SparklineData[i].Stacks[name].Values()
