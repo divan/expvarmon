@@ -15,6 +15,7 @@ type TermUISingle struct {
 	Sparkline  *termui.Sparklines
 	Pars       []*termui.Par
 	BarChart   *termui.BarChart
+	GCStats    *termui.Par
 	BarChart2  *termui.BarChart
 
 	bins int // histograms' bins count
@@ -85,6 +86,14 @@ func (t *TermUISingle) Init(data UIData) error {
 			bc.NumColor = termui.ColorBlack
 			return bc
 		}()
+		t.GCStats = func() *termui.Par {
+			p := termui.NewPar("")
+			p.Height = 4
+			p.Width = len("Max: 123ms") // example
+			p.HasBorder = false
+			p.TextFgColor = termui.ColorGreen
+			return p
+		}()
 	}
 
 	if data.HasGCIntervals {
@@ -150,13 +159,19 @@ func (t *TermUISingle) Update(data UIData) {
 		labels := make([]string, 0, len(counts))
 		for i := 0; i < len(counts); i++ {
 			vals = append(vals, int(counts[i]))
-			d := roundDuration(time.Duration(values[i]))
+			d := round(time.Duration(values[i]))
 			labels = append(labels, d.String())
 		}
 		t.BarChart.Data = vals
 		t.BarChart.DataLabels = labels
 		t.BarChart.Border.Label = "GC Pauses (last 256)"
 
+		t.GCStats.Text = fmt.Sprintf("Min: %v\nAvg: %v\n95p: %v\nMax: %v",
+			round(time.Duration(hist.Min())),
+			round(time.Duration(hist.Mean())),
+			round(time.Duration(hist.Quantile(0.95))),
+			round(time.Duration(hist.Max())),
+		)
 	}
 
 	if data.HasGCIntervals {
@@ -173,7 +188,7 @@ func (t *TermUISingle) Update(data UIData) {
 		labels := make([]string, 0, len(counts))
 		for i := 0; i < len(counts); i++ {
 			vals = append(vals, int(counts[i]))
-			d := roundDuration(time.Duration(values[i]))
+			d := round(time.Duration(values[i]))
 			labels = append(labels, d.String())
 		}
 		t.BarChart2.Data = vals
@@ -186,7 +201,7 @@ func (t *TermUISingle) Update(data UIData) {
 	var widgets []termui.Bufferer
 	widgets = append(widgets, t.Title, t.Status, t.Sparkline)
 	if data.HasGCPauses {
-		widgets = append(widgets, t.BarChart)
+		widgets = append(widgets, t.BarChart, t.GCStats)
 	}
 	if data.HasGCIntervals {
 		widgets = append(widgets, t.BarChart2)
@@ -263,6 +278,9 @@ func (t *TermUISingle) Relayout() {
 			t.BarChart.Height = h - calcHeight
 			t.BarChart.Y = th - t.BarChart.Height
 			t.BarChart.BarWidth = binWidth
+
+			t.GCStats.X = barchartWidth - t.GCStats.Width - 1
+			t.GCStats.Y = t.BarChart.Y + 1
 		}
 
 		if t.BarChart2 != nil {

@@ -1,9 +1,15 @@
 package main
 
+import (
+	"math"
+)
+
 type Histogram struct {
 	Bins    []Bin
 	Maxbins int
 	Total   uint64
+
+	min, max uint64
 }
 
 type Bin struct {
@@ -16,15 +22,24 @@ type Bin struct {
 // should be sufficient.
 func NewHistogram(n int) *Histogram {
 	return &Histogram{
-		Bins:    make([]Bin, 0),
+		Bins:    make([]Bin, 0, n),
 		Maxbins: n,
-		Total:   0,
+
+		min: math.MaxUint64,
 	}
 }
 
 func (h *Histogram) Add(n uint64) {
-	defer h.trim()
 	h.Total++
+
+	if n > h.max {
+		h.max = n
+	}
+	if n < h.min {
+		h.min = n
+	}
+
+	defer h.trim()
 	for i := range h.Bins {
 		if h.Bins[i].Value == n {
 			h.Bins[i].Count++
@@ -45,17 +60,17 @@ func (h *Histogram) Add(n uint64) {
 	h.Bins = append(h.Bins, Bin{Count: 1, Value: n})
 }
 
-func (h *Histogram) Quantile(q uint64) int64 {
-	count := q * h.Total
+func (h *Histogram) Quantile(q float64) int64 {
+	count := q * float64(h.Total)
 	for i := range h.Bins {
-		count -= h.Bins[i].Count
+		count -= float64(h.Bins[i].Count)
 
 		if count <= 0 {
 			return int64(h.Bins[i].Value)
 		}
 	}
 
-	return -1
+	return 0
 }
 
 // CDF returns the value of the cumulative distribution function
@@ -84,6 +99,24 @@ func (h *Histogram) Mean() float64 {
 	}
 
 	return sum / float64(h.Total)
+}
+
+// Min returns the minimal recorder value.
+func (h *Histogram) Min() uint64 {
+	if h.Total == 0 {
+		return 0
+	}
+
+	return h.min
+}
+
+// Max returns the maximum recorder value.
+func (h *Histogram) Max() uint64 {
+	if h.Total == 0 {
+		return 0
+	}
+
+	return h.max
 }
 
 // Variance returns the variance of the distribution

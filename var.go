@@ -129,7 +129,7 @@ type Duration struct {
 
 func (v *Duration) Kind() VarKind { return KindDuration }
 func (v *Duration) String() string {
-	return fmt.Sprintf("%s", roundDuration(time.Duration(v.dur)))
+	return fmt.Sprintf("%s", round(time.Duration(v.dur)))
 }
 
 func (v *Duration) Set(j *jason.Value) {
@@ -331,8 +331,8 @@ func (v VarName) Kind() VarKind {
 	return KindDefault
 }
 
-// roundDuration removes unneeded precision from the String() output for time.Duration.
-func roundDuration(d time.Duration) time.Duration {
+// round removes unneeded precision from the String() output for time.Duration.
+func round(d time.Duration) time.Duration {
 	r := time.Second
 	if d < time.Second {
 		r = time.Millisecond
