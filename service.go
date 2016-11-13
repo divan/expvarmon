@@ -83,7 +83,6 @@ func (s *Service) Update(wg *sync.WaitGroup) {
 		value, err := expvar.GetValue(name.ToSlice()...)
 		if err != nil {
 			v.Set(nil)
-			continue
 		}
 		v.Set(value)
 	}

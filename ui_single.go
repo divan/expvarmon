@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/divan/gcpauses"
-	"runtime"
 	"time"
 
 	"gopkg.in/gizak/termui.v1"
@@ -113,7 +111,7 @@ func (t *TermUISingle) Update(data UIData) {
 
 		spl := &t.Sparkline.Lines[i]
 
-		max := data.SparklineData[i].Stats[name].Max().String()
+		max := data.SparklineData[0].Stats[name].Max().String()
 		spl.Title = fmt.Sprintf("%s: %v (max: %v)", name.Long(), service.Value(name), max)
 		spl.TitleColor = colorByKind(name.Kind())
 		spl.LineColor = colorByKind(name.Kind())
@@ -122,25 +120,36 @@ func (t *TermUISingle) Update(data UIData) {
 	}
 
 	// BarChart
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	p := gcpauses.NewGCPauses(&m)
-	values, counts := p.Histogram(25)
-	vals := make([]int, 0, len(counts))
-	labels := make([]string, 0, len(counts))
-	for i := 0; i < len(counts); i++ {
-		vals = append(vals, int(counts[i]))
-		d := time.Duration(values[i])
-		labels = append(labels, d.String())
+	if data.HasBarchart {
+		var gcpauses *GCPauses
+		for _, v := range service.Vars {
+			if v.Kind() == KindGCPauses {
+				gcpauses = v.(*GCPauses)
+				break
+			}
+		}
+		hist := gcpauses.Histogram(20)
+		values, counts := hist.BarchartData()
+		vals := make([]int, 0, len(counts))
+		labels := make([]string, 0, len(counts))
+		for i := 0; i < len(counts); i++ {
+			vals = append(vals, int(counts[i]))
+			d := roundDuration(time.Duration(values[i]))
+			labels = append(labels, d.String())
+		}
+		t.BarChart.Data = vals
+		t.BarChart.DataLabels = labels
+		t.BarChart.Border.Label = "GC Pauses (last 256)"
+		t.BarChart.BarWidth = 7
 	}
-	t.BarChart.Data = vals
-	t.BarChart.DataLabels = labels
-	t.BarChart.Border.Label = fmt.Sprintf("%v", len(counts))
 
 	t.Relayout()
 
 	var widgets []termui.Bufferer
-	widgets = append(widgets, t.Title, t.Status, t.Sparkline, t.BarChart)
+	widgets = append(widgets, t.Title, t.Status, t.Sparkline)
+	if data.HasBarchart {
+		widgets = append(widgets, t.BarChart)
+	}
 	for _, par := range t.Pars {
 		widgets = append(widgets, par)
 	}
@@ -185,15 +194,19 @@ func (t *TermUISingle) Relayout() {
 	h -= secondRowH
 
 	// Third row: Sparklines
+	calcHeight := len(t.Sparkline.Lines) * 2
+	if calcHeight > (h / 2) {
+		calcHeight = h / 2
+	}
+
 	t.Sparkline.Width = tw
-	t.Sparkline.Height = h / 2
+	t.Sparkline.Height = calcHeight
 	t.Sparkline.Y = th - h
 
 	// Fourth row: Barchart
 	t.BarChart.Width = tw
-	t.BarChart.Height = h / 2
-	t.BarChart.Y = th - h/2
-	t.BarChart.BarWidth = 10
+	t.BarChart.Height = h - calcHeight
+	t.BarChart.Y = th - t.BarChart.Height
 }
 
 func formatMax(max interface{}) string {

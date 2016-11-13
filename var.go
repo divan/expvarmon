@@ -74,6 +74,10 @@ func (v *Number) String() string {
 	return fmt.Sprintf("%.02f", v.val)
 }
 func (v *Number) Set(j *jason.Value) {
+	if j == nil {
+		v.val = 0
+		return
+	}
 	if n, err := j.Float64(); err == nil {
 		v.val = n
 	} else if n, err := j.Int64(); err == nil {
@@ -98,6 +102,10 @@ func (v *Memory) String() string {
 	return fmt.Sprintf("%s", byten.Size(v.bytes))
 }
 func (v *Memory) Set(j *jason.Value) {
+	if j == nil {
+		v.bytes = 0
+		return
+	}
 	if n, err := j.Int64(); err == nil {
 		v.bytes = n
 	} else {
@@ -122,6 +130,10 @@ func (v *Duration) String() string {
 }
 
 func (v *Duration) Set(j *jason.Value) {
+	if j == nil {
+		v.dur = 0
+		return
+	}
 	if n, err := j.Int64(); err == nil {
 		v.dur = time.Duration(n)
 	} else if n, err := j.Float64(); err == nil {
@@ -145,6 +157,10 @@ type String struct {
 func (v *String) Kind() VarKind  { return KindString }
 func (v *String) String() string { return v.str }
 func (v *String) Set(j *jason.Value) {
+	if j == nil {
+		v.str = "N/A"
+		return
+	}
 	if n, err := j.String(); err == nil {
 		v.str = n
 	} else {
@@ -165,6 +181,9 @@ func (v *GCPauses) Kind() VarKind  { return KindGCPauses }
 func (v *GCPauses) String() string { return "" }
 func (v *GCPauses) Set(j *jason.Value) {
 	v.pauses = [256]uint64{}
+	if j == nil {
+		return
+	}
 	if arr, err := j.Array(); err == nil {
 		for i := 0; i < len(arr); i++ {
 			p, _ := arr[i].Int64()
@@ -175,7 +194,12 @@ func (v *GCPauses) Set(j *jason.Value) {
 func (v *GCPauses) Histogram(bins int) *Histogram {
 	hist := NewHistogram(bins)
 	for i := 0; i < 256; i++ {
-		hist.Add(v.pauses[i])
+		// we ignore zeros, since
+		// its never the case, but
+		// we have zeros on the very beginning
+		if v.pauses[i] > 0 {
+			hist.Add(v.pauses[i])
+		}
 	}
 	return hist
 }
