@@ -1,4 +1,4 @@
-package main
+package expvarmon
 
 import (
 	"fmt"
@@ -15,6 +15,12 @@ type TermUI struct {
 	Lists      []*termui.List
 	Sparkline1 *termui.Sparklines
 	Sparkline2 *termui.Sparklines
+	interval   time.Duration // interval between refreshes
+}
+
+// NewTermUI constructs the TermUI and sets the interval
+func NewTermUI(interval time.Duration) *TermUI {
+	return &TermUI{interval: interval}
 }
 
 // Init creates widgets, sets sizes and labels.
@@ -92,7 +98,7 @@ func (t *TermUI) Init(data UIData) error {
 
 // Update updates UI widgets from UIData.
 func (t *TermUI) Update(data UIData) {
-	t.Title.Text = fmt.Sprintf("monitoring %d services every %v, press q to quit", len(data.Services), *interval)
+	t.Title.Text = fmt.Sprintf("monitoring %d services every %v, press q to quit", len(data.Services), t.interval)
 	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format(time.Stamp))
 
 	// List with service names

@@ -1,4 +1,4 @@
-package main
+package expvarmon
 
 import (
 	"fmt"
@@ -21,7 +21,13 @@ type TermUISingle struct {
 	GCIChart *termui.BarChart
 	GCIStats *termui.Par
 
-	bins int // histograms' bins count
+	bins     int           // histograms' bins count
+	interval time.Duration // interval between refreshes
+}
+
+// NewTermUISingle constructs the TermUISingle and sets the interval
+func NewTermUISingle(interval time.Duration) *TermUISingle {
+	return &TermUISingle{interval: interval}
 }
 
 // Init creates widgets, sets sizes and labels.
@@ -128,7 +134,7 @@ func (t *TermUISingle) Update(data UIData) {
 	// single mode assumes we have one service only to monitor
 	service := data.Services[0]
 
-	t.Title.Text = fmt.Sprintf("monitoring %s every %v, press q to quit", service.Name, *interval)
+	t.Title.Text = fmt.Sprintf("monitoring %s every %v, press q to quit", service.Name, t.interval)
 	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format(time.Stamp))
 
 	// Pars

@@ -1,4 +1,4 @@
-package main
+package expvarmon
 
 import "time"
 
@@ -37,7 +37,7 @@ func NewSparklineData(vars []VarName) *SparklineData {
 // NewUIData inits and return new data object.
 func NewUIData(vars []VarName, services []*Service) *UIData {
 	sp := make([]*SparklineData, len(services))
-	for i, _ := range services {
+	for i := range services {
 		sp[i] = NewSparklineData(vars)
 	}
 
