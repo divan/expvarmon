@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"path/filepath"
@@ -10,13 +9,18 @@ import (
 	"github.com/bsiegert/ranges"
 )
 
-var ErrParsePorts = fmt.Errorf("cannot parse ports argument")
+var (
+	// ErrParsePorts is the error returned if the ports are not passed or parsable
+	ErrParsePorts = fmt.Errorf("cannot parse ports argument")
+	// ErrNoVarsSpecified is the error returned when the vars are not specified
+	ErrNoVarsSpecified = fmt.Errorf("no vars specified")
+)
 
 // ParseVars returns parsed and validated slice of strings with
 // variables names that will be used for monitoring.
 func ParseVars(vars string) ([]VarName, error) {
 	if vars == "" {
-		return nil, errors.New("no vars specified")
+		return nil, ErrNoVarsSpecified
 	}
 
 	ss := strings.FieldsFunc(vars, func(r rune) bool { return r == ',' })
@@ -146,4 +150,53 @@ func NewURL(port string) url.URL {
 		Host:   fmt.Sprintf("localhost:%s", port),
 		Path:   "/debug/vars",
 	}
+}
+
+// VarsFlag Can read from multiple vars flags
+// Usage: go run main.go -vars "mem:memstats.Alloc" -vars ",mem:memstats.Sys"
+type VarsFlag []string
+
+// Set appends the value into the array slice
+// It trims the input from spaces and commas
+func (i *VarsFlag) Set(value string) error {
+	*i = append(*i, strings.Trim(value, " ,"))
+	return nil
+}
+
+// String joins the array with "," in order to keep the
+func (i *VarsFlag) String() string {
+	return strings.Join([]string(*i), ",")
+}
+
+// VarNames returns a slice of VarName array from the input vars
+func (i *VarsFlag) VarNames() ([]VarName, error) {
+	var varSlice []VarName
+	if len(*i) == 0 {
+		return nil, ErrNoVarsSpecified
+	}
+
+	for _, str := range *i {
+		vars, err := ParseVars(str)
+		if err != nil {
+			return nil, err
+		}
+		varSlice = append(varSlice, vars...)
+	}
+
+	return uniqVarNameSlice(varSlice), nil
+}
+
+// uniqVarNameSlice returns a unique set of its values
+func uniqVarNameSlice(input []VarName) []VarName {
+	uniq := make(map[VarName]struct{})
+	ret := make([]VarName, 0, len(uniq))
+
+	for _, v := range input {
+		if _, ok := uniq[v]; !ok {
+			uniq[v] = struct{}{}
+			ret = append(ret, v)
+		}
+	}
+
+	return ret
 }
