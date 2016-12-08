@@ -14,13 +14,14 @@ import (
 var (
 	interval = flag.Duration("i", 5*time.Second, "Polling interval")
 	urls     = flag.String("ports", "", "Ports/URLs for accessing services expvars (start-end,port2,port3,https://host:port)")
-	varsArg  = flag.String("vars", "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.PauseNs,memstats.PauseEnd,duration:memstats.PauseTotalNs", "Vars to monitor (comma-separated)")
+	varsArg  = VarsFlag{"mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.PauseNs,memstats.PauseEnd,duration:memstats.PauseTotalNs"}
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
 	self     = flag.Bool("self", false, "Monitor itself")
 	endpoint = flag.String("endpoint", DefaultEndpoint, "URL endpoint for expvars")
 )
 
 func main() {
+	flag.Var(&varsArg, "vars", "Vars to monitor (comma-separated)")
 	flag.Usage = Usage
 	flag.Parse()
 
@@ -46,7 +47,7 @@ func main() {
 	}
 
 	// Process vars
-	vars, err := ParseVars(*varsArg)
+	vars, err := varsArg.VarNames()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -115,11 +116,12 @@ func Usage() {
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, `
 Examples:
-	%s -ports="80"
-	%s -ports="23000-23010,http://example.com:80-81" -i=1m
-	%s -ports="80,remoteapp:80" -vars="mem:memstats.Alloc,duration:Response.Mean,Counter"
-	%s -ports="1234-1236" -vars="Goroutines" -self
+    %s -ports="80"
+    %s -ports="23000-23010,http://example.com:80-81" -i=1m
+    %s -ports="80,remoteapp:80" -vars="mem:memstats.Alloc,duration:Response.Mean,Counter"
+    %s -ports="80,remoteapp:80" -vars="mem:memstats.Alloc" -vars="duration:Response.Mean,Counter" # multiple vars input
+    %s -ports="1234-1236" -vars="Goroutines" -self
 
 For more details and docs, see README: http://github.com/divan/expvarmon
-`, progname, progname, progname, progname)
+`, progname, progname, progname, progname, progname)
 }

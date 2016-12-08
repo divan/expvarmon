@@ -101,6 +101,7 @@ If you need to monitor more (or less) vars, you can specify them with -vars comm
 		./expvarmon -ports="80"
 		./expvarmon -ports="23000-23010,http://example.com:80-81" -i=1m
 		./expvarmon -ports="80,remoteapp:80" -vars="mem:memstats.Alloc,duration:Response.Mean,Counter"
+		./expvarmon -ports="80,remoteapp:80" -vars="mem:memstats.Alloc" -vars="duration:Response.Mean" -vars="Counter"
 		./expvarmon -ports="1234-1236" -vars="Goroutines" -self
 
 	For more details and docs, see README: http://github.com/divan/expvarmon
@@ -119,7 +120,7 @@ If your expvar endpoint is protected by Basic Auth, you have two options:
 
 ### Vars
 
-Expvarmon doesn't restrict you to monitor only memstats. You can publish your own counters and variables using [expvar.Publish()](http://golang.org/pkg/expvar/#Publish) method or using expvar wrappers libraries. Just pass your variables names as they appear in JSON to -var command line flag.
+Expvarmon doesn't restrict you to monitor only memstats. You can publish your own counters and variables using [expvar.Publish()](http://golang.org/pkg/expvar/#Publish) method or using expvar wrappers libraries. Just pass your variables names as they appear in JSON to -vars command line flag or pass multiple -vars flags.
 
 Notation is dot-separated, for example: **memstats.Alloc** for .MemStats.Alloc field. Quick link to runtime.MemStats documentation: http://golang.org/pkg/runtime/#MemStats
 
