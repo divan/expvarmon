@@ -42,7 +42,7 @@ Also it doesn't use any storage engines and doesn't send notifications.
 
 Just run go get:
 
-    go get github.com/divan/expvarmon
+    go get github.com/divan/expvarmon/...
 
 ## Usage
 

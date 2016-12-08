@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/divan/expvarmon"
+
 	"gopkg.in/gizak/termui.v1"
 )
 
@@ -17,19 +19,19 @@ var (
 	varsArg  = flag.String("vars", "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.PauseNs,memstats.PauseEnd,duration:memstats.PauseTotalNs", "Vars to monitor (comma-separated)")
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
 	self     = flag.Bool("self", false, "Monitor itself")
-	endpoint = flag.String("endpoint", DefaultEndpoint, "URL endpoint for expvars")
+	endpoint = flag.String("endpoint", expvarmon.DefaultEndpoint, "URL endpoint for expvars")
 )
 
 func main() {
 	flag.Usage = Usage
 	flag.Parse()
 
-	DefaultEndpoint = *endpoint
+	expvarmon.DefaultEndpoint = *endpoint
 
 	// Process ports/urls
-	ports, _ := ParsePorts(*urls)
+	ports, _ := expvarmon.ParsePorts(*urls)
 	if *self {
-		port, err := StartSelfMonitor()
+		port, err := expvarmon.StartSelfMonitor()
 		if err == nil {
 			ports = append(ports, port)
 		}
@@ -46,28 +48,28 @@ func main() {
 	}
 
 	// Process vars
-	vars, err := ParseVars(*varsArg)
+	vars, err := expvarmon.ParseVars(*varsArg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Init UIData
-	var services []*Service
+	var services []*expvarmon.Service
 	for _, port := range ports {
-		service := NewService(port, vars)
+		service := expvarmon.NewService(port, vars)
 		services = append(services, service)
 	}
-	data := NewUIData(vars, services)
+	data := expvarmon.NewUIData(vars, services)
 
 	// Start proper UI
-	var ui UI
+	var ui expvarmon.UI
 	if len(services) > 1 {
-		ui = &TermUI{}
+		ui = expvarmon.NewTermUI(*interval)
 	} else {
-		ui = &TermUISingle{}
+		ui = expvarmon.NewTermUISingle(*interval)
 	}
 	if *dummy {
-		ui = &DummyUI{}
+		ui = &expvarmon.DummyUI{}
 	}
 
 	if err := ui.Init(*data); err != nil {
@@ -95,7 +97,7 @@ func main() {
 }
 
 // UpdateAll collects data from expvars and refreshes UI.
-func UpdateAll(ui UI, data *UIData) {
+func UpdateAll(ui expvarmon.UI, data *expvarmon.UIData) {
 	var wg sync.WaitGroup
 	for _, service := range data.Services {
 		wg.Add(1)

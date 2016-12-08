@@ -1,4 +1,4 @@
-package main
+package expvarmon
 
 // DefaultSize specifies maximum number of items in stack.
 //
