@@ -27,6 +27,22 @@ func ParseVars(vars string) ([]VarName, error) {
 	return ret, nil
 }
 
+func ParseHeaders(headers []string) map[string]string {
+	ret := make(map[string]string, len(headers))
+	for _, header := range headers {
+		tokens := strings.Split(header, ":")
+		if len(tokens) < 2 {
+			continue
+		}
+
+		k := strings.TrimSpace(tokens[0])
+		v := strings.TrimSpace(strings.Join(tokens[1:], ":"))
+
+		ret[k] = v
+	}
+	return ret
+}
+
 // BaseCommand returns cleaned command name from Cmdline array.
 //
 // I.e. "./some.service/binary.name -arg 1 -arg" will be "binary.name".

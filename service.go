@@ -18,9 +18,10 @@ var (
 
 // Service represents constantly updating info about single service.
 type Service struct {
-	URL     url.URL
-	Name    string
-	Cmdline string
+	URL           url.URL
+	CustomHeaders map[string]string
+	Name          string
+	Cmdline       string
 
 	stacks map[VarName]*Stack
 
@@ -47,7 +48,7 @@ func NewService(url url.URL, vars []VarName) *Service {
 // Update updates Service info from Expvar variable.
 func (s *Service) Update(wg *sync.WaitGroup) {
 	defer wg.Done()
-	expvar, err := FetchExpvar(s.URL)
+	expvar, err := FetchExpvar(s.URL, s.CustomHeaders)
 	// check for restart
 	if s.Err != nil && err == nil {
 		s.Restarted = true

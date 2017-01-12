@@ -24,7 +24,7 @@ func getBasicAuthEnv() (user, password string) {
 }
 
 // FetchExpvar fetches expvar by http for the given addr (host:port)
-func FetchExpvar(u url.URL) (*Expvar, error) {
+func FetchExpvar(u url.URL, headers map[string]string) (*Expvar, error) {
 	e := &Expvar{&jason.Object{}}
 	client := &http.Client{
 		Timeout: 1 * time.Second, // TODO: make it configurable or left default?
@@ -33,6 +33,10 @@ func FetchExpvar(u url.URL) (*Expvar, error) {
 	req, _ := http.NewRequest("GET", "localhost", nil)
 	req.URL = &u
 	req.Host = u.Host
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
 
 	if user, pass := getBasicAuthEnv(); user != "" && pass != "" {
 		req.SetBasicAuth(user, pass)
