@@ -8,7 +8,10 @@ import (
 	"os"
 	"time"
 
+	"fmt"
 	"github.com/antonholmquist/jason"
+	"io/ioutil"
+	"regexp"
 )
 
 // DefaultEndpoint is the default url for fetching expvar info.
