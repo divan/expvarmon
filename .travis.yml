@@ -1,6 +1,6 @@
 language: go
 go: 
- - release
+ - 1.8.1
 
 script:
  - go test -v ./...
