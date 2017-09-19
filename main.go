@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"sync"
 	"time"
 
@@ -42,6 +43,12 @@ func main() {
 	if *interval <= 0 {
 		fmt.Fprintln(os.Stderr, "update interval is not valid. Valid examples: 5s, 1m, 1h30m")
 		Usage()
+		os.Exit(1)
+	}
+
+	// Sig handler for ctrl+c
+	if err := genSignalHandler(); err != nil {
+		fmt.Fprintf(os.Stderr, "could not generate signal handler: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -91,6 +98,20 @@ func main() {
 			}
 		}
 	}
+}
+
+// genSignalHandler will take care of user pressing ctrl+c
+func genSignalHandler() error {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	go func() {
+		<-c
+		fmt.Fprintf(os.Stderr, "caught SIGINT, closing shop...\n")
+		os.Exit(0)
+	}()
+
+	return nil
 }
 
 // UpdateAll collects data from expvars and refreshes UI.
