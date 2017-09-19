@@ -18,6 +18,7 @@ var (
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
 	self     = flag.Bool("self", false, "Monitor itself")
 	endpoint = flag.String("endpoint", DefaultEndpoint, "URL endpoint for expvars")
+	uiTheme  = flag.String("theme", "dark", "UI color theme. Possible values: dark, default.")
 )
 
 func main() {
@@ -52,7 +53,7 @@ func main() {
 	}
 
 	// Init UIData
-	data := NewUIData(vars)
+	data := NewUIData(vars, ParseUiTheme(*uiTheme))
 	for _, port := range ports {
 		service := NewService(port, vars)
 		data.Services = append(data.Services, service)

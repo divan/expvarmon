@@ -12,6 +12,14 @@ import (
 
 var ErrParsePorts = fmt.Errorf("cannot parse ports argument")
 
+func ParseUiTheme(theme string) string {
+	t := ""
+	if theme == "dark" {
+		t = "helloworld"
+	}
+	return t
+}
+
 // ParseVars returns parsed and validated slice of strings with
 // variables names that will be used for monitoring.
 func ParseVars(vars string) ([]VarName, error) {
