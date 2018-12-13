@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/gizak/termui.v1"
+	termui "gopkg.in/gizak/termui.v1"
 )
 
 // TermUI is a termUI implementation of UI interface.
@@ -224,6 +224,8 @@ func colorByKind(kind VarKind) termui.Attribute {
 	case KindMemory:
 		return termui.ColorRed | termui.AttrBold
 	case KindDuration:
+		return termui.ColorYellow | termui.AttrBold
+	case KindDurationString:
 		return termui.ColorYellow | termui.AttrBold
 	case KindString:
 		return termui.ColorGreen | termui.AttrBold
