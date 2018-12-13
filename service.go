@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/antonholmquist/jason"
 )
@@ -86,6 +87,15 @@ func (s *Service) Update(wg *sync.WaitGroup) {
 		}
 		v := guessValue(value)
 		if v != nil {
+			// Special case: if we have a duration string, guessValue
+			// will return a string.  We should try to parse it and
+			// push the resulting int64 instead
+			if name.Kind() == KindDurationString {
+				if d, err := time.ParseDuration(v.(string)); err == nil {
+					stack.Push(int64(d))
+					continue
+				}
+			}
 			stack.Push(v)
 		}
 	}

@@ -27,6 +27,7 @@ const (
 	KindMemory
 	KindDuration
 	KindString
+	KindDurationString
 )
 
 // ToSlice converts "dot-separated" notation into the "slice of strings".
@@ -76,6 +77,8 @@ func (v VarName) Kind() VarKind {
 		return KindDuration
 	case "str":
 		return KindString
+	case "durationstr":
+		return KindDurationString
 	}
 	return KindDefault
 }
@@ -84,15 +87,15 @@ func (v VarName) Kind() VarKind {
 func Format(v VarValue, kind VarKind) string {
 	switch kind {
 	case KindMemory:
-		if _, ok := v.(int64); !ok {
-			break
+		if i, ok := v.(int64); ok {
+			return fmt.Sprintf("%s", byten.Size(i))
 		}
-		return fmt.Sprintf("%s", byten.Size(v.(int64)))
+	case KindDurationString:
+		fallthrough
 	case KindDuration:
-		if _, ok := v.(int64); !ok {
-			break
+		if i, ok := v.(int64); ok {
+			return fmt.Sprintf("%s", roundDuration(time.Duration(i)))
 		}
-		return fmt.Sprintf("%s", roundDuration(time.Duration(v.(int64))))
 	}
 
 	if f, ok := v.(float64); ok {
