@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/gizak/termui.v1"
+	"github.com/gizak/termui"
 )
 
 // TermUI is a termUI implementation of UI interface.
 type TermUI struct {
-	Title      *termui.Par
-	Status     *termui.Par
+	Title      *termui.Paragraph
+	Status     *termui.Paragraph
 	Services   *termui.List
 	Lists      []*termui.List
 	Sparkline1 *termui.Sparklines
@@ -24,29 +24,30 @@ func (t *TermUI) Init(data UIData) error {
 		return err
 	}
 
-	termui.UseTheme("helloworld")
-
-	t.Title = func() *termui.Par {
-		p := termui.NewPar("")
+	t.Title = func() *termui.Paragraph {
+		p := termui.NewParagraph("")
 		p.Height = 3
 		p.TextFgColor = termui.ColorWhite
-		p.Border.Label = "Services Monitor"
-		p.Border.FgColor = termui.ColorCyan
+		p.Border = true
+		p.BorderLabel = "Services Monitor"
+		p.BorderFg = termui.ColorCyan
 		return p
 	}()
-	t.Status = func() *termui.Par {
-		p := termui.NewPar("")
+	t.Status = func() *termui.Paragraph {
+		p := termui.NewParagraph("")
 		p.Height = 3
 		p.TextFgColor = termui.ColorWhite
-		p.Border.Label = "Status"
-		p.Border.FgColor = termui.ColorCyan
+		p.Border = true
+		p.BorderLabel = "Status"
+		p.BorderFg = termui.ColorCyan
 		return p
 	}()
 	t.Services = func() *termui.List {
 		list := termui.NewList()
 		list.ItemFgColor = termui.ColorGreen
-		list.Border.LabelFgColor = termui.ColorGreen | termui.AttrBold
-		list.Border.Label = "Services"
+		list.Border = true
+		list.BorderLabelFg = termui.ColorGreen | termui.AttrBold
+		list.BorderLabel = "Services"
 		list.Height = len(data.Services) + 2
 		return list
 	}()
@@ -55,10 +56,11 @@ func (t *TermUI) Init(data UIData) error {
 	for i, name := range data.Vars {
 		list := termui.NewList()
 		list.ItemFgColor = colorByKind(name.Kind())
-		list.Border.Label = name.Short()
-		list.Border.LabelFgColor = termui.ColorGreen
+		list.Border = true
+		list.BorderLabel = name.Short()
+		list.BorderLabelFg = termui.ColorGreen
 		if i < 2 {
-			list.Border.LabelFgColor = termui.ColorGreen | termui.AttrBold
+			list.BorderLabelFg = termui.ColorGreen | termui.AttrBold
 		}
 		list.Height = len(data.Services) + 2
 		t.Lists[i] = list
@@ -76,8 +78,8 @@ func (t *TermUI) Init(data UIData) error {
 
 		s := termui.NewSparklines(sparklines...)
 		s.Height = 2*len(data.Services) + 2
-		s.HasBorder = true
-		s.Border.Label = fmt.Sprintf("Monitoring %s", name.Long())
+		s.Border = true
+		s.BorderLabel = fmt.Sprintf("Monitoring %s", name.Long())
 		return s
 	}
 	t.Sparkline1 = makeSparkline(data.Vars[0])

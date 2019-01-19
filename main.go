@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/gizak/termui.v1"
+	"github.com/gizak/termui"
 )
 
 var (
@@ -75,18 +75,17 @@ func main() {
 	defer ui.Close()
 
 	tick := time.NewTicker(*interval)
-	evtCh := termui.EventCh()
 
 	UpdateAll(ui, data)
 	for {
 		select {
 		case <-tick.C:
 			UpdateAll(ui, data)
-		case e := <-evtCh:
-			if e.Type == termui.EventKey && e.Ch == 'q' {
+		case e := <-termui.PollEvents():
+			if e.Type == termui.KeyboardEvent && e.ID == "q" {
 				return
 			}
-			if e.Type == termui.EventResize {
+			if e.Type == termui.ResizeEvent {
 				ui.Update(*data)
 			}
 		}

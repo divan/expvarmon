@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/gizak/termui.v1"
+	"github.com/gizak/termui"
 )
 
 // TermUISingle is a termUI implementation of UI interface.
 type TermUISingle struct {
-	Title      *termui.Par
-	Status     *termui.Par
+	Title      *termui.Paragraph
+	Status     *termui.Paragraph
 	Sparklines map[VarName]*termui.Sparkline
 	Sparkline  *termui.Sparklines
-	Pars       []*termui.Par
+	Pars       []*termui.Paragraph
 }
 
 // Init creates widgets, sets sizes and labels.
@@ -25,31 +25,32 @@ func (t *TermUISingle) Init(data UIData) error {
 
 	t.Sparklines = make(map[VarName]*termui.Sparkline)
 
-	termui.UseTheme("helloworld")
-
-	t.Title = func() *termui.Par {
-		p := termui.NewPar("")
+	t.Title = func() *termui.Paragraph {
+		p := termui.NewParagraph("")
 		p.Height = 3
 		p.TextFgColor = termui.ColorWhite
-		p.Border.Label = "Services Monitor"
-		p.Border.FgColor = termui.ColorCyan
+		p.Border = true
+		p.BorderLabel = "Services Monitor"
+		p.BorderFg = termui.ColorCyan
 		return p
 	}()
-	t.Status = func() *termui.Par {
-		p := termui.NewPar("")
+	t.Status = func() *termui.Paragraph {
+		p := termui.NewParagraph("")
 		p.Height = 3
 		p.TextFgColor = termui.ColorWhite
-		p.Border.Label = "Status"
-		p.Border.FgColor = termui.ColorCyan
+		p.Border = true
+		p.BorderLabel = "Status"
+		p.BorderFg = termui.ColorCyan
 		return p
 	}()
 
-	t.Pars = make([]*termui.Par, len(data.Vars))
+	t.Pars = make([]*termui.Paragraph, len(data.Vars))
 	for i, name := range data.Vars {
-		par := termui.NewPar("")
+		par := termui.NewParagraph("")
 		par.TextFgColor = colorByKind(name.Kind())
-		par.Border.Label = name.Short()
-		par.Border.LabelFgColor = termui.ColorGreen
+		par.Border = true
+		par.BorderLabel = name.Short()
+		par.BorderLabelFg = termui.ColorGreen
 		par.Height = 3
 		t.Pars[i] = par
 	}
@@ -67,8 +68,8 @@ func (t *TermUISingle) Init(data UIData) error {
 	t.Sparkline = func() *termui.Sparklines {
 		s := termui.NewSparklines(sparklines...)
 		s.Height = 2*len(sparklines) + 2
-		s.HasBorder = true
-		s.Border.Label = fmt.Sprintf("Monitoring")
+		s.Border = true
+		s.BorderLabel = fmt.Sprintf("Monitoring")
 		return s
 	}()
 
