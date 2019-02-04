@@ -1,0 +1,57 @@
+PACKAGE
+
+package ranges
+    import "."
+
+    Package ranges contains tools for working with integer ranges.
+
+
+    An "integer range" allows to give a set of numbers as a string, which
+    can be parsed by a call to Parse. The result can be obtained as a slice
+    of integers by calling Expand or be tested against with Contains.
+
+FUNCTIONS
+
+func Parse(r string) ([]int, error)
+
+
+TYPES
+
+type IntRange struct {
+    Lo, Hi int
+}
+    An IntRange is a single component of an integer range expression.
+
+func (ir *IntRange) Clean()
+    Clean exchanges the upper and lower bound if the upper bound is smaller
+    than the lower one.
+
+func (ir *IntRange) Contains(value int) bool
+    Contains returns true if ir contains value.
+
+func (ir *IntRange) Expand() []int
+    Expand returns a sorted slice of integers that contains all the numbers
+    in ir.
+
+type IntRanges []IntRange
+    IntRanges is a slice of multiple integer ranges, allowing the expression
+    of non-contiguous ranges (for example "1,3-4").
+
+func (ir *IntRanges) Contains(value int) bool
+    Contains returns true if ir contains value.
+
+func (ir *IntRanges) Expand() []int
+    Expand returns a slice of integers that contains all the numbers in ir.
+    If ir has been cleaned by calling Clean, the slice will be sorted.
+
+func (ir *IntRanges) Len() int
+    Len returns the number of distinct ranges in ir.
+
+func (ir *IntRanges) Less(i, j int) bool
+    Less returns true if the lower bound of the i-th element is smaller than
+    the one of the j-th element.
+
+func (ir *IntRanges) Swap(i, j int)
+    Swap swaps the i-th and the j-th element.
+
+
