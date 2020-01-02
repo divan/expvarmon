@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/divan/expvarmon/pkg/fetch"
 	"net/url"
 	"strings"
 	"sync"
@@ -47,7 +48,7 @@ func NewService(url url.URL, vars []VarName) *Service {
 // Update updates Service info from Expvar variable.
 func (s *Service) Update(wg *sync.WaitGroup) {
 	defer wg.Done()
-	expvar, err := FetchExpvar(s.URL)
+	expvar, err := fetch.FetchExpvar(s.URL)
 	// check for restart
 	if s.Err != nil && err == nil {
 		s.Restarted = true

@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 	"testing"
+
+	"github.com/divan/expvarmon/pkg/fetch"
 )
 
 const (
@@ -17,7 +19,7 @@ func TestExpvars(t *testing.T) {
 	}
 	defer file.Close()
 
-	expvar, err := ParseExpvar(file)
+	expvar, err := fetch.ParseExpvar(file)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +56,7 @@ func TestExpvarsAdvanced(t *testing.T) {
 	}
 	defer file.Close()
 
-	expvar, err := ParseExpvar(file)
+	expvar, err := fetch.ParseExpvar(file)
 	if err != nil {
 		t.Fatal(err)
 	}

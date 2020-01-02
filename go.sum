@@ -5,6 +5,7 @@ github.com/bsiegert/ranges v0.0.0-20111221115336-19303dc7aa63/go.mod h1:8z71/aZj
 github.com/cjbassi/drawille-go v0.0.0-20190126131713-27dc511fe6fd h1:XtfPmj9tQRilnrEmI1HjQhxXWRhEM+m8CACtaMJE/kM=
 github.com/cjbassi/drawille-go v0.0.0-20190126131713-27dc511fe6fd/go.mod h1:vjcQJUZJYD3MeVGhtZXSMnCHfUNZxsyYzJt90eCYxK4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/ezbuy/expvarmon v0.0.0-20190204123027-8bf297f0fa5d h1:DZJxplghDVV/XcxGVhPG+obFCGOejp+zqg3FnYjp0C4=
 github.com/gizak/termui v0.0.0-20181228210747-b136f68f55f1 h1:TCe+sQ3zOPa8KNePfjrb5Pix5FPa44WsiiCzsYv0Yts=
 github.com/gizak/termui v0.0.0-20181228210747-b136f68f55f1/go.mod h1:W48Llfv3G9PIK3TQjqynxzC9mP4HUcAn/6vlDWekq9k=
 github.com/gizak/termui v0.0.0-20190202061602-5ece2b7178ff h1:md8xjZ5dOJsdTnDXsnbu2W9WLBpZ3yh8ebRad+i2bQY=
