@@ -8,10 +8,7 @@ import (
 	"os"
 	"time"
 
-	"fmt"
 	"github.com/antonholmquist/jason"
-	"io/ioutil"
-	"regexp"
 )
 
 // DefaultEndpoint is the default url for fetching expvar info.
@@ -26,7 +23,7 @@ func getBasicAuthEnv() (user, password string) {
 	return os.Getenv("HTTP_USER"), os.Getenv("HTTP_PASSWORD")
 }
 
-// FetchExpvar fetches expvar by http for the given addr (host:port)
+// FetchExpvar fetches expvar by http for the given addr (host:port).
 func FetchExpvar(u url.URL, headers map[string]string) (*Expvar, error) {
 	e := &Expvar{&jason.Object{}}
 	client := &http.Client{

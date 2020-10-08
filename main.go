@@ -120,7 +120,7 @@ func UpdateAll(ui UI, data *UIData) {
 	ui.Update(*data)
 }
 
-// Usage reimplements flag.Usage
+// Usage reimplements flag.Usage.
 func Usage() {
 	progname := os.Args[0]
 	fmt.Fprintf(os.Stderr, "Usage of %s:\n", progname)
@@ -134,5 +134,5 @@ Examples:
 	%s -ports="1234-1236" -vars="Goroutines" -self
 
 For more details and docs, see README: http://github.com/divan/expvarmon
-`, progname, progname, progname, progname)
+`, progname, progname, progname, progname, progname)
 }

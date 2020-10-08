@@ -8,13 +8,11 @@ import (
 	"github.com/antonholmquist/jason"
 )
 
-var (
-	// uptimeCounter is a variable used for tracking uptime status.
-	// It should be always incrementing and included into default expvar vars.
-	// Could be replaced with something different or made configurable in
-	// the future.
-	uptimeCounter = VarName("memstats.PauseTotalNs").ToSlice()
-)
+// uptimeCounter is a variable used for tracking uptime status.
+// It should be always incrementing and included into default expvar vars.
+// Could be replaced with something different or made configurable in
+// the future.
+var uptimeCounter = VarName("memstats.PauseTotalNs").ToSlice()
 
 // Service represents constantly updating info about single service.
 type Service struct {
@@ -34,7 +32,7 @@ type Service struct {
 func NewService(url url.URL, vars []VarName) *Service {
 	values := make(map[VarName]*Stack)
 	for _, name := range vars {
-		values[VarName(name)] = NewStack()
+		values[name] = NewStack()
 	}
 
 	return &Service{
@@ -92,7 +90,7 @@ func (s *Service) Update(wg *sync.WaitGroup) {
 	}
 }
 
-// guessValue attemtps to bruteforce all supported types.
+// guessValue attempts to bruteforce all supported types.
 func guessValue(value *jason.Value) interface{} {
 	if v, err := value.Int64(); err == nil {
 		return v

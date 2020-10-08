@@ -50,29 +50,29 @@ func TestExtractUrlAndPorts(t *testing.T) {
 }
 
 func TestParseHeaders(t *testing.T) {
-	hdrs := []string{"X-MyCustom-Auth: abcd12345",
+	hdrs := []string{
+		"X-MyCustom-Auth: abcd12345",
 		"Accept-encoding: application/json",
 		"X-Multi-Colon: foo:bar",
 		"X-Spaces-Trimmed:    foobar",
 	}
 
-	parsed_headers := ParseHeaders(hdrs)
-	if parsed_headers["X-MyCustom-Auth"] != "abcd12345" {
-		t.Fatalf("Header parsing failed: %v\n", parsed_headers)
+	parsedHeaders := ParseHeaders(hdrs)
+	if parsedHeaders["X-MyCustom-Auth"] != "abcd12345" {
+		t.Fatalf("Header parsing failed: %v\n", parsedHeaders)
 	}
 
-	if parsed_headers["Accept-encoding"] != "application/json" {
-		t.Fatalf("Header parsing failed: %v\n", parsed_headers)
+	if parsedHeaders["Accept-encoding"] != "application/json" {
+		t.Fatalf("Header parsing failed: %v\n", parsedHeaders)
 	}
 
-	if parsed_headers["X-Multi-Colon"] != "foo:bar" {
-		t.Fatalf("Header parsing failed: %v\n", parsed_headers)
+	if parsedHeaders["X-Multi-Colon"] != "foo:bar" {
+		t.Fatalf("Header parsing failed: %v\n", parsedHeaders)
 	}
 
-	if parsed_headers["X-Spaces-Trimmed"] != "foobar" {
-		t.Fatalf("Header parsing failed: %v\n", parsed_headers)
+	if parsedHeaders["X-Spaces-Trimmed"] != "foobar" {
+		t.Fatalf("Header parsing failed: %v\n", parsedHeaders)
 	}
-
 }
 
 func TestPorts(t *testing.T) {
