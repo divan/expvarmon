@@ -49,6 +49,32 @@ func TestExtractUrlAndPorts(t *testing.T) {
 	}
 }
 
+func TestParseHeaders(t *testing.T) {
+	hdrs := []string{
+		"X-MyCustom-Auth: abcd12345",
+		"Accept-encoding: application/json",
+		"X-Multi-Colon: foo:bar",
+		"X-Spaces-Trimmed:    foobar",
+	}
+
+	parsedHeaders := ParseHeaders(hdrs)
+	if parsedHeaders["X-MyCustom-Auth"] != "abcd12345" {
+		t.Fatalf("Header parsing failed: %v\n", parsedHeaders)
+	}
+
+	if parsedHeaders["Accept-encoding"] != "application/json" {
+		t.Fatalf("Header parsing failed: %v\n", parsedHeaders)
+	}
+
+	if parsedHeaders["X-Multi-Colon"] != "foo:bar" {
+		t.Fatalf("Header parsing failed: %v\n", parsedHeaders)
+	}
+
+	if parsedHeaders["X-Spaces-Trimmed"] != "foobar" {
+		t.Fatalf("Header parsing failed: %v\n", parsedHeaders)
+	}
+}
+
 func TestPorts(t *testing.T) {
 	arg := "1234,1235"
 	ports, err := ParsePorts(arg)

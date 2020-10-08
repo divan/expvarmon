@@ -22,7 +22,7 @@ func uptime() interface{} {
 	return int64(uptime)
 }
 
-// startPort defines lower port for bind
+// startPort defines lower port for bind.
 const startPort = 32768
 
 // StartSelfMonitor starts http server on random port and exports expvars.

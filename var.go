@@ -13,7 +13,7 @@ import (
 // It has dot-separated format, like "memstats.Alloc",
 // but can be used in different forms, hence it's own type.
 //
-// It also can have optional "kind:" modifier, like "mem:" or "duration:"
+// It also can have optional "kind:" modifier, like "mem:" or "duration:".
 type VarName string
 
 // VarKind specifies special kinds of values, affects formatting.
@@ -35,7 +35,7 @@ const (
 // "slice of strings" is used by Jason library.
 //
 // Example: "memstats.Alloc" => []string{"memstats", "Alloc"}
-// Example: "mem:memstats.Alloc" => []string{"memstats", "Alloc"}
+// Example: "mem:memstats.Alloc" => []string{"memstats", "Alloc"}.
 func (v VarName) ToSlice() []string {
 	start := strings.IndexRune(string(v), ':') + 1
 	slice := DottedFieldsToSliceEscaped(string(v)[start:])
@@ -62,7 +62,7 @@ func (v VarName) Long() string {
 	return string(v)[start:]
 }
 
-// Kind returns kind of variable, based on it's name modifiers ("mem:")
+// Kind returns kind of variable, based on it's name modifiers ("mem:").
 func (v VarName) Kind() VarKind {
 	start := strings.IndexRune(string(v), ':')
 	if start == -1 {
@@ -87,12 +87,12 @@ func Format(v VarValue, kind VarKind) string {
 		if _, ok := v.(int64); !ok {
 			break
 		}
-		return fmt.Sprintf("%s", byten.Size(v.(int64)))
+		return byten.Size(v.(int64))
 	case KindDuration:
 		if _, ok := v.(int64); !ok {
 			break
 		}
-		return fmt.Sprintf("%s", roundDuration(time.Duration(v.(int64))))
+		return roundDuration(time.Duration(v.(int64))).String()
 	}
 
 	if f, ok := v.(float64); ok {
@@ -119,7 +119,7 @@ func roundDuration(d time.Duration) time.Duration {
 		d = -d
 	}
 	if m := d % r; m+m < r {
-		d = d - m
+		d -= m
 	} else {
 		d = d + r - m
 	}

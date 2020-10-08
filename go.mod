@@ -1,5 +1,7 @@
 module github.com/divan/expvarmon
 
+go 1.15
+
 require (
 	github.com/antonholmquist/jason v1.0.0
 	github.com/bsiegert/ranges v0.0.0-20111221115336-19303dc7aa63

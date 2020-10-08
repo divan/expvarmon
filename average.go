@@ -5,7 +5,7 @@ import (
 )
 
 func averageJason(array []*jason.Value) float64 {
-	var arr []float64
+	arr := make([]float64, 0, len(array))
 	for _, v := range array {
 		val, _ := v.Float64()
 		arr = append(arr, val)
