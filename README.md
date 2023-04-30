@@ -1,7 +1,5 @@
 # ExpvarMon
 
-[![Build Status](https://travis-ci.org/divan/expvarmon.svg?branch=master)](https://travis-ci.org/divan/expvarmon)
-
 TermUI based Go apps monitor using [expvars](http://golang.org/pkg/expvar/) variables (/debug/vars). Quickest way to monitor your Go app.
 
 ## Introduction
@@ -42,7 +40,7 @@ Also it doesn't use any storage engines and doesn't send notifications.
 
 Just run go get:
 
-    go get github.com/divan/expvarmon
+    go install github.com/divan/expvarmon@latest
 
 ## Usage
 
