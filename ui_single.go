@@ -55,7 +55,7 @@ func (t *TermUISingle) Init(data UIData) error {
 		t.Pars[i] = par
 	}
 
-	var sparklines []termui.Sparkline
+	sparklines := make([]termui.Sparkline, 0, len(data.Vars))
 	for _, name := range data.Vars {
 		spl := termui.NewSparkline()
 		spl.Height = 1
@@ -69,7 +69,7 @@ func (t *TermUISingle) Init(data UIData) error {
 		s := termui.NewSparklines(sparklines...)
 		s.Height = 2*len(sparklines) + 2
 		s.Border = true
-		s.BorderLabel = fmt.Sprintf("Monitoring")
+		s.BorderLabel = "Monitoring"
 		return s
 	}()
 
@@ -108,8 +108,7 @@ func (t *TermUISingle) Update(data UIData) {
 
 	t.Relayout()
 
-	var widgets []termui.Bufferer
-	widgets = append(widgets, t.Title, t.Status, t.Sparkline)
+	widgets := []termui.Bufferer{t.Title, t.Status, t.Sparkline}
 	for _, par := range t.Pars {
 		widgets = append(widgets, par)
 	}

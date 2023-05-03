@@ -11,6 +11,17 @@ import (
 	"github.com/gizak/termui"
 )
 
+type arrayFlags []string
+
+func (i *arrayFlags) String() string {
+	return "list of custom headers to pass to the endpoint"
+}
+
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 var (
 	interval = flag.Duration("i", 5*time.Second, "Polling interval")
 	urls     = flag.String("ports", "", "Ports/URLs for accessing services expvars (start-end,port2,port3,https://host:port)")
@@ -18,9 +29,11 @@ var (
 	dummy    = flag.Bool("dummy", false, "Use dummy (console) output")
 	self     = flag.Bool("self", false, "Monitor itself")
 	endpoint = flag.String("endpoint", DefaultEndpoint, "URL endpoint for expvars")
+	headers  arrayFlags
 )
 
 func main() {
+	flag.Var(&headers, "headers", "Custom headers to pass onto application")
 	flag.Usage = Usage
 	flag.Parse()
 
@@ -55,6 +68,7 @@ func main() {
 	data := NewUIData(vars)
 	for _, port := range ports {
 		service := NewService(port, vars)
+		service.CustomHeaders = ParseHeaders(headers)
 		data.Services = append(data.Services, service)
 	}
 
@@ -106,7 +120,7 @@ func UpdateAll(ui UI, data *UIData) {
 	ui.Update(*data)
 }
 
-// Usage reimplements flag.Usage
+// Usage reimplements flag.Usage.
 func Usage() {
 	progname := os.Args[0]
 	fmt.Fprintf(os.Stderr, "Usage of %s:\n", progname)
@@ -114,10 +128,11 @@ func Usage() {
 	fmt.Fprintf(os.Stderr, `
 Examples:
 	%s -ports="80"
+	%s -headers="X-Custom-Header: Foo" -headers="X-Another-Header: Bar" -ports="80"
 	%s -ports="23000-23010,http://example.com:80-81" -i=1m
 	%s -ports="80,remoteapp:80" -vars="mem:memstats.Alloc,duration:Response.Mean,Counter"
 	%s -ports="1234-1236" -vars="Goroutines" -self
 
 For more details and docs, see README: http://github.com/divan/expvarmon
-`, progname, progname, progname, progname)
+`, progname, progname, progname, progname, progname)
 }

@@ -20,11 +20,27 @@ func ParseVars(vars string) ([]VarName, error) {
 	}
 
 	ss := strings.FieldsFunc(vars, func(r rune) bool { return r == ',' })
-	var ret []VarName
+	ret := make([]VarName, 0, len(ss))
 	for _, s := range ss {
 		ret = append(ret, VarName(s))
 	}
 	return ret, nil
+}
+
+func ParseHeaders(headers []string) map[string]string {
+	ret := make(map[string]string, len(headers))
+	for _, header := range headers {
+		tokens := strings.Split(header, ":")
+		if len(tokens) < 2 {
+			continue
+		}
+
+		k := strings.TrimSpace(tokens[0])
+		v := strings.TrimSpace(strings.Join(tokens[1:], ":"))
+
+		ret[k] = v
+	}
+	return ret
 }
 
 // BaseCommand returns cleaned command name from Cmdline array.
@@ -41,8 +57,6 @@ func BaseCommand(cmdline []string) string {
 //
 // Note, rawurl shouldn't contain port, as port will be appended.
 func flattenURLs(rawurl string, ports []string) ([]url.URL, error) {
-	var urls []url.URL
-
 	// Add http by default
 	if !strings.HasPrefix(rawurl, "http") {
 		rawurl = fmt.Sprintf("http://%s", rawurl)
@@ -58,6 +72,7 @@ func flattenURLs(rawurl string, ports []string) ([]url.URL, error) {
 	}
 
 	// Create new URL for each port
+	urls := make([]url.URL, 0, len(ports))
 	for _, port := range ports {
 		u := *baseURL
 		u.Host = fmt.Sprintf("%s:%s", u.Host, port)
@@ -66,7 +81,7 @@ func flattenURLs(rawurl string, ports []string) ([]url.URL, error) {
 	return urls, nil
 }
 
-// ParsePorts parses and flattens comma-separated ports/urls into URLs slice
+// ParsePorts parses and flattens comma-separated ports/urls into URLs slice.
 func ParsePorts(s string) ([]url.URL, error) {
 	var urls []url.URL
 	fields := strings.FieldsFunc(s, func(r rune) bool { return r == ',' })
@@ -93,7 +108,7 @@ func ParsePorts(s string) ([]url.URL, error) {
 // for the single port and range of ports to parse.
 //
 // i.e. "http://name:1234-1236/_endpoint" would return "http://name/_endpoint" and
-// "1234-1236"
+// "1234-1236".
 func extractURLAndPorts(s string) (string, string) {
 	var rawurl, ports string
 	parts := strings.Split(s, ":")
@@ -125,14 +140,14 @@ func extractURLAndPorts(s string) (string, string) {
 	return rawurl, ports
 }
 
-// parseRange flattens port ranges, such as "1234-1240,1333"
+// parseRange flattens port ranges, such as "1234-1240,1333".
 func parseRange(s string) ([]string, error) {
 	portsInt, err := ranges.Parse(s)
 	if err != nil {
 		return nil, err
 	}
 
-	var ports []string
+	ports := make([]string, 0, len(portsInt))
 	for _, port := range portsInt {
 		ports = append(ports, fmt.Sprintf("%d", port))
 	}

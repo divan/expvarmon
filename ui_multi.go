@@ -98,7 +98,7 @@ func (t *TermUI) Update(data UIData) {
 	t.Status.Text = fmt.Sprintf("Last update: %v", data.LastTimestamp.Format(time.Stamp))
 
 	// List with service names
-	var services []string
+	services := make([]string, 0, len(data.Services))
 	for _, service := range data.Services {
 		services = append(services, StatusLine(service))
 	}
@@ -128,8 +128,7 @@ func (t *TermUI) Update(data UIData) {
 
 	t.Relayout()
 
-	var widgets []termui.Bufferer
-	widgets = append(widgets, t.Title, t.Status, t.Services, t.Sparkline1)
+	widgets := []termui.Bufferer{t.Title, t.Status, t.Services, t.Sparkline1}
 	for _, list := range t.Lists {
 		widgets = append(widgets, list)
 	}
@@ -200,7 +199,6 @@ func (t *TermUI) Relayout() {
 		t.Sparkline2.Height = h
 		t.Sparkline2.Y = th - h
 	}
-
 }
 
 // Close shuts down UI module.
