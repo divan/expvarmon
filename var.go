@@ -87,7 +87,7 @@ func Format(v VarValue, kind VarKind) string {
 		if _, ok := v.(int64); !ok {
 			break
 		}
-		return fmt.Sprintf("%s", byten.Size(v.(int64)))
+		return byten.Size(v.(int64))
 	case KindDuration:
 		if _, ok := v.(int64); !ok {
 			break
